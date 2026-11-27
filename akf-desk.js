@@ -78,7 +78,8 @@ window.AKF_shrinkImage = async function (file, maxSide = 1600, quality = 0.75, l
   }
   // the page's own client refreshes the sign-in; this one only reads it (same storage key as akf-gate.js)
   try { const as = JSON.parse(sessionStorage.getItem("akf-as") || "null"), erp = location.pathname.indexOf("/portal-staging/") === 0;
-    if (as || erp) { const b = document.createElement("div"); b.id = "akf-as-strip"; b.setAttribute("role", "status");
+    if ((as || erp) && window.top === window) {   // once per tab: not again inside the Super Admin tools frame
+      const b = document.createElement("div"); b.id = "akf-as-strip"; b.setAttribute("role", "status");
       b.textContent = (erp ? "TRAINING ERP: practice data only. Nothing here changes the real ERP." : "TRAINING VIEW") + (as && as.name ? " · " + as.name : "") + " · close this tab to leave";
       b.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:2147483000;padding:5px 12px;background:#b45309;color:#fff;font:700 12px/1.3 system-ui,sans-serif;text-align:center;pointer-events:none";
       (document.body || document.documentElement).append(b); } } catch (_) { }
