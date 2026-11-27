@@ -153,7 +153,7 @@
     if (ups.length) { const { error } = await sb.from("portal_rows").upsert(ups, { onConflict: "collection,id" }); if (error) throw error; }
     return ups.length;
   }
-  const plain = e => { const m = String((e && e.message) || ""); return m && m.length < 220 ? m : "Not saved on the server. Try again."; };
+  const plain = e => { const m = String((e && e.message) || ""); return m && m.length < 220 && !/relation|column|function|syntax|policy|violates|jsonb|null value|permission denied/i.test(m) ? m : "Not saved on the server. Try again."; };   // no table or rule names on screen
 
   /* ---- sheets ---- */
   const ITEM_COLS = [
@@ -205,6 +205,10 @@
     name: "Store",
     async load(sb) {
       const S = await readRows(sb, READ);
+      // the store names saved in the portal (Settings → Stores) replace the default list, in place so the sheet columns follow
+      const { data: sr } = await sb.from("portal_rows").select("data").eq("collection", "settings").eq("id", "global").maybeSingle();
+      const named = ((sr && sr.data && sr.data.stores) || []).filter(x => /^[A-Z0-9]{1,6} \S/.test(String(x || "")));
+      if (named.length) { STORES.splice(0, STORES.length, ...named); ITEM_COLS.find(c => c.k === "store").ex = STORES[0]; }
       const openingOf = id => S.ledger.filter(l => l.itemId === id && movementKind(l) === "opening").reduce((a, l) => a + (l.type === "in" ? 1 : -1) * (Number(l.qty) || 0), 0);
       const sheets = [
         { key: "items", name: "Stock items", about: "One row per item line (the same item in another condition or store is its own line).", match: "id",

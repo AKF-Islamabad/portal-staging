@@ -20,7 +20,7 @@
     v: 1,
     procurement: { steps: [
       S("submitted", "Requested", "HOD (Requester)", "hod", "fixed"),
-      S("budget", "Budget approved", "Finance Department", "finance", "approval"),
+      S("budget", "Budget approved", "Sr. Manager Finance", "finance", "approval"),
       S("rec_hr", "Recommended", "Manager Admin & HR", "manager_hr", "approval"),
       S("rec_rm", "Recommended", "Regional Manager", "regional_manager", "approval"),
       S("approved", "Approved", "President", "president", "approval", { final: true }),
@@ -53,14 +53,16 @@
       S("to_check", "Vehicle & driver assigned", "Transport Officer", "transport_officer", "fixed"),
       S("rec_hr", "Recommended", "Manager Admin & HR", "manager_hr", "approval"),
       S("approved", "Approved", "Regional Manager", "regional_manager", "approval", { final: true }),
-      S("dispatched", "On duty (dispatched)", "Transport Officer", "transport_officer", "fixed"),
-      S("returned", "Returned & verified", "Transport Officer", "transport_officer", "fixed")] },
+      // after approval: the driver starts the trip (start odometer, after the daily checklist) and marks the return (end odometer);
+      // these give the real KM and hours of the usage log and free the vehicle for the next booking
+      S("dispatched", "Trip started (start odometer)", "Driver", "transport_officer", "fixed"),
+      S("returned", "Vehicle returned (end odometer)", "Driver", "transport_officer", "fixed")] },
     /* Assistance Management: a beneficiary application (minAmount = requested amount in PKR: 0 = every case).
        The Department Head may skip the Director with a reason; the last step is Finance (money) or the Store Officer (in-kind items). */
     assistance: { steps: [
       S("submitted", "Registered", "Front Desk Officer", "front_desk", "fixed"),
       S("dept", "Reviewed by department", "Department Head", "hod", "fixed"),
-      S("director", "Reviewed by director", "Department Director", "director", "approval"),
+      S("director", "Reviewed by director", "Department Director", "director", "approval", { on: false }),   // off until the Super Admin switches it on
       S("rm", "Recommended", "Regional Manager", "regional_manager", "approval"),
       S("president", "Approved", "President", "president", "approval", { final: true }),
       S("exec", "Paid / items issued", "Finance / Store Officer", "finance", "fixed")] },

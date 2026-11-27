@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- script-src is filled in by erp/tools/build-assistance.js (and again by tools/csp-hash.js on deploy) -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'sha256-Ovsc7wZc/kr+SZM6+f5RJiXPE+JkAT02qS624mh6cBQ=' 'sha256-gvc50QAhIoBOxybhaYTDXM9vKSjKXM5t3V3pcW4/WVM='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self'; media-src 'none'; form-action 'none'; base-uri 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://cdn.jsdelivr.net/npm/xlsx@0.18.5/ https://cdn.jsdelivr.net/npm/jsqr@1.4.0/ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/ 'sha256-Ovsc7wZc/kr+SZM6+f5RJiXPE+JkAT02qS624mh6cBQ=' 'sha256-1LlMNsKz+jMfeySrUK1JA5v7VtDlHoFXCRMCaa5fUok='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self'; media-src 'none'; form-action 'none'; base-uri 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'">
 <style id="no-frame">html{display:none!important}</style>
 <script>if(window.self===window.top){var nf=document.getElementById("no-frame");nf.parentNode.removeChild(nf);}else{try{window.top.location=window.self.location;}catch(e){}}</script>
 <meta name="robots" content="noindex, nofollow">
@@ -1147,10 +1147,10 @@ body{background:var(--bg)}
 .as-track .st{flex:1;min-width:100px;position:relative;text-align:center;font-size:12.5px}
 .as-track .st::before{content:"";position:absolute;top:15px;left:-50%;right:50%;height:2px;background:var(--border-strong)}
 .as-track .st:first-child::before{display:none}
-.as-track .st.done::before,.as-track .st.cur::before,.as-track .st.skip::before,.as-track .st.rej::before{background:var(--brand-600)}
+.as-track .st.done::before,.as-track .st.cur::before,.as-track .st.skip::before,.as-track .st.rej::before{background:var(--as-ok)}
 .as-track .dot{position:relative;width:32px;height:32px;margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:2px solid var(--border-strong);color:var(--muted);font-weight:700}
-.as-track .done .dot{background:var(--brand-600);border-color:var(--brand-600);color:#fff}
-.as-track .cur .dot{border-color:var(--brand-600);color:var(--as-accent);box-shadow:0 0 0 5px color-mix(in srgb,var(--brand-600) 16%,transparent)}
+.as-track .done .dot{background:var(--as-ok);border-color:var(--as-ok);color:#fff}
+.as-track .cur .dot{border-color:var(--as-warn);color:var(--text);box-shadow:0 0 0 5px color-mix(in srgb,var(--as-warn) 20%,transparent)}
 .as-track .skip .dot{background:var(--as-skip-bg);border-style:dashed;color:var(--as-skip)}
 .as-track .rej .dot{background:var(--as-err);border-color:var(--as-err);color:#fff}
 .as-track b{display:block;font-weight:600;color:var(--text)} .as-track .todo b{color:var(--muted);font-weight:500} .as-track small{color:var(--muted)}
@@ -1232,10 +1232,11 @@ ol.as-stages b{font-weight:600;font-size:14px} ol.as-stages small{display:block;
 .as-viewer{display:grid;place-items:center;min-height:240px;background:var(--surface-2);border-radius:12px;padding:10px}
 .as-viewer img{max-width:100%;height:auto;display:block;border-radius:8px}
 /* print slip (only the slip is printed) */
+/* design.css (shared with Fleet) prints only #print-area, so the slip rule needs !important to beat it */
 #printArea{display:none}
 @media print{
   body.as-printing>*:not(#printArea){display:none!important}
-  body.as-printing #printArea{display:block;color:#000;font:13px/1.5 Arial,sans-serif}
+  body.as-printing #printArea{display:block!important;color:#000;font:13px/1.5 Arial,sans-serif}
   .as-slip{border:1.5px solid #000;border-radius:10px;padding:20px;max-width:640px;margin:0 auto}
   .as-slip header{display:flex;gap:14px;align-items:center;border-bottom:1px solid #999;padding-bottom:12px;margin-bottom:14px}
   .as-slip header img{width:60px;height:60px;border-radius:8px}
@@ -1268,7 +1269,7 @@ ol.as-stages b{font-weight:600;font-size:14px} ol.as-stages small{display:block;
     <div><div class="crumb" id="crumb">Alkhidmat Foundation Islamabad</div><h1 id="page-title">Assistance Management</h1></div>
     <div class="top-actions">
       <span class="top-chip" id="top-chip"></span>
-      <div class="bell-wrap"><button class="btn-icon bell" id="bell-btn" type="button" aria-label="Notifications"><span id="bell-ic"></span><span class="bell-count hidden" id="bell-count">0</span></button></div>
+      <div class="bell-wrap" hidden><button class="btn-icon bell" id="bell-btn" type="button" aria-label="Notifications"><span id="bell-ic"></span><span class="bell-count hidden" id="bell-count">0</span></button></div>
       <button class="btn-icon" id="theme-btn" type="button" aria-label="Toggle dark mode"></button>
     </div>
   </header>
@@ -1284,6 +1285,7 @@ ol.as-stages b{font-weight:600;font-size:14px} ol.as-stages small{display:block;
 <script src="../akf-gate.js"></script>
 <script src="../akf-assistant.js"></script>   <!-- REQUIRED in every portal: Alkhidmat AI (SECURITY-PROTOCOL.md §9) -->
 <script src="../akf-matrix.js"></script>
+<script src="../akf-charts.js"></script>   <!-- Jazba charts: 3D, animated, clickable -->
 <script src="../akf-desk.js" defer></script>   <!-- REQUIRED in every portal: sticky note + notifications -->
 <script>
 /* =====================================================================================================
@@ -1340,7 +1342,14 @@ const BUCKET = "assistance-docs", MAX_FILE = 5 * 1024 * 1024, FILE_TYPES = { "ap
 const DAY = 864e5;
 const SKIP_REASONS = ["Director is unavailable", "Director review not needed for this case", "Urgent case", "Other (explain in remarks)"];
 const MARITAL = ["Single", "Married", "Widowed", "Divorced"], EDUCATION = ["None", "Primary", "Middle", "Matric", "Intermediate", "Graduate", "Postgraduate"];
-const NOTIFY_EVENTS = { submitted: "Application registered", assigned: "Case arrives in an inbox", returned: "Returned for correction", approved: "Approved by President",
+const ZONES = ["Zone 01", "Zone 02", "Zone 03", "Zone 04", "Zone 05", "Zone 06", "Zone 07", "Zone 08", "Zone 09", "Other"];
+// UC numbers already saved (from the database and from the applications on screen), offered again in the form and the list filter
+const ucOptions = () => [...new Set([...A.ucs, ...A.apps.map(a => a.uc)].filter(Boolean))].sort((x, y) => x.localeCompare(y, "en", { numeric: true }));
+// report rows come per zone + UC: add them up per zone for the chart
+const zoneTotals = rows => Object.values((rows || []).reduce((m, x) => { const z = m[x.zone] || (m[x.zone] = { zone: x.zone, total: 0, disbursedPKR: 0 }); z.total += x.total || 0; z.disbursedPKR += x.disbursedPKR || 0; return m; }, {}));
+console.assert((() => { const z = zoneTotals([{ zone: "Zone 01", uc: "1", total: 2, disbursedPKR: 500 }, { zone: "Zone 01", uc: "2", total: 1, disbursedPKR: 0 }, { zone: "Other", uc: "", total: 4 }]);
+  return z.length === 2 && z[0].total === 3 && z[0].disbursedPKR === 500 && z[1].total === 4 && !zoneTotals().length; })(), "zoneTotals: one line per zone, UC rows added up");
+const NOTIFY_EVENTS = { submitted: "Application registered", assigned: "Case arrives in an inbox", returned: "Sent back for correction", approved: "Approved by President",
   rejected: "Rejected", completed: "Assistance delivered", overdue: "Past the time limit" };
 const WIDGETS = {
   banner: { t: "Action banner", d: "New application or inbox shortcut", full: true }, kpis: { t: "Key figures", d: "Inbox, in progress, completed, disbursed", full: true },
@@ -1351,8 +1360,8 @@ const WIDGETS = {
 const DEFAULT_DASH = ["banner", "kpis", "overdue", "pipeline", "stagetime", "recent", "depts", "mynotes"];
 const THEME_KEY = "akf_asst_theme", SIDE_KEY = "akf_asst_side", DASH_KEY = "akf_asst_dash";   // no personal data in the browser: only these three
 let SB = null, ME = null, GRID = {}, NAME = "Assistance Management", SET = null;
-const A = { apps: [], pii: {}, notes: [], seen: { at: "", ids: [] }, audit: [], summary: null };
-const V = { view: "dashboard", id: null, filter: { q: "", status: "", type: "", dept: "" }, trackQ: "", noteTab: "mine", msgTab: "tosend", editDash: false,
+const A = { apps: [], pii: {}, notes: [], seen: { at: "", ids: [] }, audit: [], summary: null, ucs: [] };
+const V = { view: "dashboard", id: null, filter: { q: "", status: "", type: "", dept: "", zone: "", uc: "" }, trackQ: "", noteTab: "mine", msgTab: "tosend", editDash: false,
   draft: null, editId: null, proof: null, dup: [], flowPrev: null, busy: false };
 const can = (tab, act) => !!ME && (ME.isSuper || (GRID[tab] || []).includes(act || "view"));
 const roleKey = () => ME.isSuper ? "super" : ME.role;
@@ -1376,7 +1385,8 @@ function erpErr(e, what) {
   const ref = errRef(); console.error("[ref " + ref + "]", e && (e.code || e.name));   // no message: it may contain personal data
   const m = e && e.message || "";
   const friendly = e && ["42501", "22023", "23514", "P0001"].includes(e.code) && m.length < 300 && !/relation|column|function|syntax|policy|violates|jsonb/i.test(m);
-  return what + (friendly ? ": " + m : ".") + " (ref " + ref + ")";
+  if (navigator.onLine === false) return what + ". You are offline. Check your internet and try again.";
+  return friendly ? what + ": " + m + " (ref " + ref + ")" : what + ". Please try again. If it happens again, give reference " + ref + " to the Super Admin.";
 }
 /* text safety: no stored text can break out of HTML (the database refuses these characters) */
 const BADMAP = { "<": "‹", ">": "›", '"': "”", "'": "’", "`": "ʼ", "\\": "/" };
@@ -1404,7 +1414,7 @@ const flowIdx = (a, key) => (a.flow || []).findIndex(s => s.key === key);
 function stageLabel(a, key) {
   const st = key || a.status;
   return ({ dept: "Department review", director: "Director review", rm: "RM recommendation", president: "President approval",
-    exec: a.type === "inkind" ? "Store – issue items" : "Finance – disbursement", returned: "Returned for correction", rejected: "Rejected", closed: "Completed", submitted: "Registered" })[st]
+    exec: a.type === "inkind" ? "Store – issue items" : "Finance – disbursement", returned: "Sent back for correction", rejected: "Rejected", closed: "Completed", submitted: "Registered" })[st]
     || (stepOf(a, st) ? stepOf(a, st).label + " (" + stepOf(a, st).who + ")" : st);
 }
 const STATUS_KEYS = ["dept", "director", "rm", "president", "exec", "returned", "rejected", "closed"];
@@ -1478,6 +1488,7 @@ async function loadAll() {
   A.apps = []; A.pii = {}; A.notes = []; A.audit = []; A.seen = { at: "", ids: [] };
   rows.forEach(r => applyRow(r.collection, r.id, r.data));
   A.notes.sort((x, y) => String(y.at).localeCompare(String(x.at)));
+  if (can("applications", "add")) SB.rpc("assistance_uc_list").then(r => { if (Array.isArray(r.data)) A.ucs = r.data; }, () => {});   // only suggestions: the form works without them
 }
 async function reloadSettings() {
   try { const s = await rpc("assistance_settings_public", {}, "The settings could not be loaded"); if (s) SET = s; } catch (e) { toast(e.message, "error"); }
@@ -1490,7 +1501,7 @@ function subscribe() {
       const r = p.eventType === "DELETE" ? p.old : p.new; if (!r || !r.collection) return;
       applyRow(r.collection, r.id, p.eventType === "DELETE" ? null : r.data);
       if (r.collection === "notifications") A.notes.sort((x, y) => String(y.at).localeCompare(String(x.at)));
-      clearTimeout(rtT); rtT = setTimeout(() => { const typing = /INPUT|SELECT|TEXTAREA/.test((document.activeElement || {}).tagName || "") || V.view === "new" || $("layer").classList.contains("open"); if (typing) buildChrome(); else render(); }, 600);
+      clearTimeout(rtT); rtT = setTimeout(() => { const typing = /INPUT|SELECT|TEXTAREA/.test((document.activeElement || {}).tagName || "") || V.view === "new" || $("layer").classList.contains("open"); if (typing) buildChrome(); else render(true); }, 600);
     }).subscribe();
   };
   const off = () => { if (chan) { SB.removeChannel(chan); chan = null; } };
@@ -1498,7 +1509,7 @@ function subscribe() {
   document.addEventListener("visibilitychange", () => { if (document.hidden) off(); else { on(); refresh(); } });
   if (!document.hidden) on();
 }
-async function refresh() { try { await loadAll(); } catch (e) { toast(String(e.message || e), "error"); } if (V.view !== "new") render(); else buildChrome(); }
+async function refresh() { try { await loadAll(); } catch (e) { toast(String(e.message || e), "error"); } if (V.view !== "new") render(true); else buildChrome(); }
 function audit(action, target, detail) {
   if (!SB) return;
   SB.from("assistance_rows").insert({ collection: "audit", id: "A" + Date.now() + rid().slice(0, 6), data: cleanDeep({ action: String(action).slice(0, 40), target: String(target || "").slice(0, 80), detail: String(detail || "").slice(0, 300) }) })
@@ -1548,7 +1559,7 @@ function widgetBody(id) {
   if (id === "banner") {
     if (can("applications", "add") && (ME.role === "front_desk" || ME.isSuper)) return `<div class="as-hero"><div><h2>Register a new application</h2><p>Enter the applicant's details, attach the signed form and send it to the department.</p></div><button class="btn btn-lg" type="button" data-nav="new">${ic("plus")}New application</button></div>`;
     if (can("applications", "approve")) return `<div class="as-hero"><div><h2>${mine.length ? plural(mine.length, "application") + " waiting for you" : "Your inbox is clear"}</h2><p>${mine.length ? "Review and take action to keep families from waiting." : "New cases will appear here and in your notifications."}</p></div><button class="btn btn-lg" type="button" data-nav="inbox">${ic("inbox")}Open inbox</button></div>`;
-    return `<div class="as-hero"><div><h2>${plural(late.length, "case")} past the time limit</h2><p>Use smart tracking to see where applications are slowing down.</p></div>${can("tracking") ? `<button class="btn btn-lg" type="button" data-nav="track">${ic("target")}Smart tracking</button>` : ""}</div>`;
+    return `<div class="as-hero"><div><h2>${plural(late.length, "case")} past the time limit</h2><p>Use smart tracking to see where applications are slowing down.</p></div>${can("tracking") ? `<button class="btn btn-lg" type="button" data-nav="track">${ic("target")}Track</button>` : ""}</div>`;
   }
   if (id === "kpis") {
     const mon = todayPK().slice(0, 7);
@@ -1566,7 +1577,10 @@ function widgetBody(id) {
   if (id === "pipeline") {
     const stages = ["dept", "director", "rm", "president", "exec", "returned"], other = apps.filter(a => isOpen(a) && !stages.includes(a.status));
     const rows = stages.map(s => [stageLabel({ type: "financial" }, s).replace("Finance – disbursement", "Finance / Store"), apps.filter(a => a.status === s)]).concat(other.length ? [["Other approvals", other]] : []);
-    const max = Math.max(1, ...rows.map(r => r[1].length));
+    const max = Math.max(1, ...rows.map(r => r[1].length)), keys = stages.concat(other.length ? ["other"] : []);
+    if (window.AKF_CHARTS) return card("Where applications are now", `<div class="as-cb">${AKF_CHARTS.bars({ id: "as-stage", empty: "No applications yet.",
+      items: rows.map(([l, list], i) => ({ key: keys[i], label: l, value: list.length, color: keys[i] === "returned" ? "#B45309" : "", note: list.filter(isLate).length ? list.filter(isLate).length + " past the time limit" : "" })) })}</div>`,
+      `<button class="btn btn-ghost btn-sm" type="button" data-nav="all">View all ${ic("right", "i-sm")}</button>`);
     return card("Where applications are now", `<div class="as-cb as-pipe">${rows.map(([l, list]) => { const n = list.length, lt = list.filter(isLate).length; return `<div class="as-pipe-row"><span>${esc(l)}</span><span class="bar"><i style="width:${n / max * 100}%"></i></span><b>${n}${lt ? `<small class="as-wait-late" title="past the time limit"> (${lt})</small>` : ""}</b></div>`; }).join("")}</div>`,
       `<button class="btn btn-ghost btn-sm" type="button" data-nav="all">View all ${ic("right", "i-sm")}</button>`);
   }
@@ -1586,7 +1600,8 @@ function widgetBody(id) {
     const rows = names.map(d => { const list = apps.filter(a => a.department === d);
       return { d, total: list.length, open: list.filter(isOpen).length, done: list.filter(a => a.status === "closed").length, rej: list.filter(a => a.status === "rejected").length,
         amount: list.filter(a => a.status === "closed" && a.type === "financial").reduce((s, a) => s + Number((a.execution || {}).amount || 0), 0) }; });
-    return card("By department <span class=\"small muted\">(cases you can see)</span>", `<div class="as-cb"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Department</th><th>Total</th><th>In progress</th><th>Completed</th><th>Rejected</th><th>Disbursed</th></tr></thead><tbody>${rows.map(x => `<tr><td class="t-name">${esc(x.d)}</td><td>${x.total}</td><td>${x.open}</td><td>${x.done}</td><td>${x.rej}</td><td>${esc(rs(x.amount))}</td></tr>`).join("")}</tbody></table></div></div>`);
+    const donut = window.AKF_CHARTS ? AKF_CHARTS.donut({ id: "as-dept", center: "applications", empty: "No applications yet.", items: rows.map(x => ({ key: x.d, label: x.d, value: x.total })) }) : "";
+    return card("By department <span class=\"small muted\">(cases you can see)</span>", `<div class="as-cb">${donut}<div class="tbl-wrap" style="margin-top:14px"><table class="tbl"><thead><tr><th>Department</th><th>Total</th><th>In progress</th><th>Completed</th><th>Rejected</th><th>Disbursed</th></tr></thead><tbody>${rows.map(x => `<tr><td class="t-name">${esc(x.d)}</td><td>${x.total}</td><td>${x.open}</td><td>${x.done}</td><td>${x.rej}</td><td>${esc(rs(x.amount))}</td></tr>`).join("")}</tbody></table></div></div>`);
   }
   if (id === "mynotes") {
     const list = myNotes().slice(0, 5);
@@ -1610,7 +1625,7 @@ function viewDashboard() {
 
 /* ---------- lists ---------- */
 function appTable(list, emptyMsg) {
-  if (!list.length) return emptyBox("inbox", emptyMsg, "Nothing needs your attention right now.");
+  if (!list.length) return emptyBox("inbox", emptyMsg, /match/.test(emptyMsg) ? "Change the search or the filters." : "");
   const sub = a => { const p = piiOf(a); return p ? esc(p.cnic) : esc(a.category); };
   const wait = a => { if (!isOpen(a)) return "—"; const w = daysWaiting(a); return `<span class="${isLate(a) ? "as-wait-late" : ""}">${w === 0 ? "Today" : plural(w, "day")}</span>`; };
   const req = a => a.type === "inkind" ? esc(trimS(a.request.items, 28)) : esc(rs(a.request.amount));
@@ -1621,14 +1636,14 @@ function appTable(list, emptyMsg) {
 }
 function viewInbox() {
   const front = ME.role === "front_desk", list = inbox();
-  const t = front ? ["Returned to me", "Applications sent back for correction."] : ME.isSuper ? ["Waiting for action", "Every open case (you may stand in for an approver)."] : ["My inbox", "Applications waiting for your step."];
-  return head(t[0], t[1] + " Oldest first.") + `<div class="card">${appTable(list, "Your inbox is clear")}</div>`;
+  const t = front ? ["Sent back to me", "Applications sent back for correction."] : ME.isSuper ? ["Waiting for action", "Every open case (you may stand in for an approver)."] : ["My inbox", "Applications waiting for your step."];
+  return head(t[0], t[1] + " Oldest first.") + `<div class="card">${appTable(list, "Nothing is waiting for you")}</div>`;
 }
 function filtered() {
   const f = V.filter, q = f.q.trim().toLowerCase();
   return A.apps.filter(a => { const p = piiOf(a) || {};
     return (!q || [a.id, a.name, p.cnic, p.phone, String(p.cnic || "").replace(/-/g, ""), String(p.phone || "").replace(/-/g, "")].join(" ").toLowerCase().includes(q))
-      && (!f.status || (f.status === "other" ? !STATUS_KEYS.includes(a.status) : a.status === f.status)) && (!f.type || a.type === f.type) && (!f.dept || a.department === f.dept); })
+      && (!f.status || (f.status === "other" ? !STATUS_KEYS.includes(a.status) : a.status === f.status)) && (!f.type || a.type === f.type) && (!f.dept || a.department === f.dept) && (!f.zone || (a.zone || "Not set") === f.zone) && (!f.uc || a.uc === f.uc); })
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
 }
 function viewAll() {
@@ -1641,14 +1656,16 @@ function viewAll() {
       <label class="sr-only" for="fs">Status</label><select class="select" id="fs" data-filter="status">${opt("", "All statuses", f.status)}${STATUS_KEYS.map(k => opt(k, stageLabel({ type: "financial" }, k).replace("Finance – disbursement", "Finance / Store"), f.status)).join("")}${opt("other", "Other approvals", f.status)}</select>
       <label class="sr-only" for="ft">Type</label><select class="select" id="ft" data-filter="type">${opt("", "All types", f.type)}${opt("financial", "Financial", f.type)}${opt("inkind", "In-kind", f.type)}</select>
       <label class="sr-only" for="fd">Department</label><select class="select" id="fd" data-filter="dept">${opt("", "All departments", f.dept)}${depts.map(d => opt(d, d, f.dept)).join("")}</select>
+      <label class="sr-only" for="fz">Zone</label><select class="select" id="fz" data-filter="zone">${opt("", "All zones", f.zone)}${ZONES.concat("Not set").map(z => opt(z, z, f.zone)).join("")}</select>
+      <label class="sr-only" for="fu">UC number</label><select class="select" id="fu" data-filter="uc">${opt("", "All UCs", f.uc)}${ucOptions().map(u => opt(u, "UC " + u, f.uc)).join("")}</select>
     </div><div id="allTable">${appTable(filtered(), "No applications match")}</div></div>`;
 }
 /* CSV of the list as filtered (Applications → Export); CNIC / mobile only with the Applicant details tick */
 function downloadCsv() {
   if (!can("applications", "export")) return toast("You need Applications → Export", "error");
   const pii = can("applicant"), cell = v => { let s = String(v == null ? "" : v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return '"' + s.replace(/"/g, '""') + '"'; };
-  const rows = [["Tracking ID", "Applicant", ...(pii ? ["CNIC", "Mobile"] : []), "Department", "Category", "Type", "Requested (Rs)", "Items", "Recommended (Rs)", "Approved (Rs)", "Paid (Rs)", "Status", "Registered", "Days at stage"]]
-    .concat(filtered().map(a => { const p = piiOf(a) || {}; return [a.id, a.name, ...(pii ? [p.cnic || "", p.phone || ""] : []), a.department, a.category, a.type === "inkind" ? "In-kind" : "Financial",
+  const rows = [["Tracking ID", "Applicant", ...(pii ? ["CNIC", "Mobile"] : []), "Zone", "UC number", "Department", "Category", "Type", "Requested (Rs)", "Items", "Recommended (Rs)", "Approved (Rs)", "Paid (Rs)", "Status", "Registered", "Days at stage"]]
+    .concat(filtered().map(a => { const p = piiOf(a) || {}; return [a.id, a.name, ...(pii ? [p.cnic || "", p.phone || ""] : []), a.zone || "", a.uc || "", a.department, a.category, a.type === "inkind" ? "In-kind" : "Financial",
       a.request.amount || "", a.request.items || "", (a.rm && a.rm.amount) || "", a.approvedAmount || "", (a.execution && a.execution.amount) || "", stageLabel(a), String(a.createdAt || "").slice(0, 10), isOpen(a) ? daysWaiting(a) : ""]; }));
   const blob = new Blob(["﻿" + rows.map(r => r.map(cell).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "Alkhidmat_Assistance_" + todayPK() + ".csv"; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
@@ -1688,7 +1705,7 @@ function viewNew() {
   const slots = (SET.docSlots || []);
   return head(editing ? "Correct application " + esc(editing) : "New application", editing ? "Fix the points raised, then send it back to the department." : "Copy the details from the paper form.",
       editing ? `<button class="btn btn-ghost" type="button" data-act="open" data-id="${esc(editing)}">${ic("left", "i-sm")}Back to case</button>` : `<button class="btn btn-ghost" type="button" data-act="discard">${ic("x", "i-sm")}Clear form</button>`)
-    + (editing && getApp(editing) && getApp(editing).returnNote ? `<div class="as-note n-warn" style="margin-bottom:16px">${ic("undo")}<span><b>Returned for correction:</b> ${esc(getApp(editing).returnNote)}</span></div>` : "")
+    + (editing && getApp(editing) && getApp(editing).returnNote ? `<div class="as-note n-warn" style="margin-bottom:16px">${ic("undo")}<span><b>Sent back for correction:</b> ${esc(getApp(editing).returnNote)}</span></div>` : "")
     + `<form class="card as-flush" id="wizForm" novalidate style="max-width:1000px">
     <div class="as-sec"><h3>Personal details <span class="as-ur">ذاتی کوائف</span></h3><p class="sub">&nbsp;</p>
       <div class="as-fgrid as-c3">
@@ -1708,6 +1725,11 @@ function viewNew() {
       <div class="as-fgrid as-c2" style="margin-top:16px">
         ${field("applicant.address", "Full address", { req: true, ur: "مکمل ایڈریس", attrs: 'maxlength="300"' })}
         ${field("applicant.phone", "Mobile number", { ph: "0300-0000000", help: "Optional. Used for the messages to the applicant.", attrs: 'inputmode="tel" maxlength="12" data-mask="phone" autocomplete="off"', msg: "Enter an 11-digit mobile number" })}
+      </div>
+      <div class="as-fgrid as-c2" style="margin-top:16px">
+        ${field("applicant.zone", "Zone", { req: true, type: "select", options: ZONES })}
+        ${field("applicant.uc", "UC number", { ph: "For example 12", help: "Optional. UC numbers saved before are suggested as you type.", attrs: 'maxlength="20" list="ucList" autocomplete="off"' })}
+        <datalist id="ucList">${ucOptions().map(u => `<option value="${esc(u)}"></option>`).join("")}</datalist>
       </div>
       <div class="as-fgrid as-c3" style="margin-top:16px">
         ${seg("household.housing", "House", [["Own", "Own"], ["Rented", "Rented"]], "مکان ذاتی / کرایہ پر")}
@@ -1736,11 +1758,13 @@ function viewNew() {
     <div class="as-sec"><h3>Paper form</h3><p class="sub">Keep the signed original on file. Upload a photo or scan for the approvers.</p>
       <div style="display:grid;gap:12px">${slots.map(s => slotHtml(s, d.docs.filter(f => f.slot === s.k))).join("")}</div>
     </div>
-    <div class="as-foot"><button class="btn btn-primary btn-lg" type="submit" ${V.busy ? "disabled" : ""}>${ic("send", "i-sm")}${editing ? "Resubmit to department" : "Submit to department"}</button></div>
+    <div class="as-foot"><button class="btn btn-primary btn-lg" type="submit" ${V.busy ? "disabled" : ""}>${ic("send", "i-sm")}${editing ? "Correct and resubmit" : "Send for approval"}</button></div>
   </form>`;
 }
-const dupHtml = () => V.dup.length ? `<div class="as-note n-warn" style="margin-top:16px">${ic("alert")}<span><b>This CNIC already has ${plural(V.dup.length, "application")}:</b> ${V.dup.map(x => `${esc(x.id)} (${esc(x.stage)}, ${esc(x.category)})`).join(", ")}. Check before registering again.</span></div>` : "";
-const flowPrevHtml = () => V.flowPrev && V.flowPrev.length ? `<div class="as-note n-info">${ic("shield")}<span><b>This case will go through:</b> ${V.flowPrev.filter(s => s.key !== "submitted").map(s => esc(s.who)).join(" → ")}</span></div>` : "";
+const dupHtml = () => V.dup.length ? `<div class="as-note n-warn" style="margin-top:16px">${ic("alert")}<span><b>This CNIC already has ${plural(V.dup.length, "application")}:</b> ${V.dup.map(x => `${esc(x.id)} (${esc(x.stage)}, ${esc(x.category)})`).join(", ")}. Check before registering again.${lastCase() ? ` <button type="button" class="btn btn-outline btn-sm" data-act="fill-last" style="margin-left:6px">Fill this person's details from ${esc(lastCase().id)}</button>` : ""}</span></div>` : "";
+/* a returning person: their newest earlier case that this user can already open (nothing new is read from the database) */
+const lastCase = () => V.dup.map(x => getApp(x.id)).filter(a => a && piiOf(a)).sort((a, b) => a.id < b.id ? 1 : -1)[0];
+const flowPrevHtml = () => V.flowPrev && V.flowPrev.length ? `<div class="as-note n-info">${ic("shield")}<span><b>Approval path:</b> ${V.flowPrev.filter(s => s.key !== "submitted").map(s => esc(s.who)).join(" → ")}</span></div>` : "";
 function collectForm() {
   const f = $("wizForm"); if (!f || !V.draft) return;
   f.querySelectorAll("input,select,textarea").forEach(el => {
@@ -1757,13 +1781,13 @@ function validateForm() {
   const ph = f.querySelector("[name='applicant.phone']"); if (ph && ph.value && !/^03\d{2}-\d{7}$/.test(ph.value)) bad(ph, true);
   (SET.docSlots || []).filter(s => s.req).forEach(s => { const miss = !V.draft.docs.some(x => x.slot === s.k), box = f.querySelector(`[data-slot="${s.k}"]`); if (box) box.classList.toggle("bad", miss); if (miss) { ok = false; first = first || box; } });
   if (first) { first.scrollIntoView({ block: "center", behavior: "smooth" }); if (first.focus) first.focus({ preventScroll: true }); }
-  if (!ok) toast("Please complete the highlighted fields", "error");
+  if (!ok) toast("Please fill the highlighted fields", "error");
   return ok;
 }
 const num = v => v === "" || v == null ? null : Number(v);
 async function submitForm() {
   const d = V.draft; if (V.busy) return;
-  const p_app = { name: d.applicant.name, age: num(d.applicant.age), marital: d.applicant.marital || "", education: d.applicant.education || "", type: d.request.type,
+  const p_app = { name: d.applicant.name, age: num(d.applicant.age), marital: d.applicant.marital || "", education: d.applicant.education || "", zone: d.applicant.zone || "", uc: d.applicant.uc || "", type: d.request.type,
     department: d.request.department, category: d.request.category, amount: d.request.type === "financial" ? num(d.request.amount) : null,
     items: d.request.type === "inkind" ? d.request.items : "", value: d.request.type === "inkind" ? num(d.request.value) : null, fund: d.request.fund || "", description: d.request.description,
     docs: d.docs.map(f => ({ slot: f.slot, path: f.path, name: f.name })) };
@@ -1807,8 +1831,8 @@ function trackerHtml(a) {
     if (a.status === "rejected" && i === cur) { cls = "rej"; mark = ic("x", "i-sm"); sub = "Rejected"; }
     if (a.status === "returned" && i === 0) sub = "Correction";
     if (a.status === "closed" && i === steps.length - 1) { cls = "done"; mark = ic("check", "i-sm"); }
-    if (i === cur && !sub && a.status !== "closed") sub = isLate(a) ? "Overdue" : "Current";
-    return `<div class="st ${cls}" role="listitem"><div class="dot">${mark}</div><b>${esc(l)}</b><small class="${sub === "Overdue" ? "as-wait-late" : ""}">${sub}</small></div>`; }).join("")}</div>`;
+    if (i === cur && !sub && a.status !== "closed") { const w = daysWaiting(a), t = w > 0 ? "for " + w + (w === 1 ? " day" : " days") : "since today"; sub = isLate(a) ? "Overdue · " + t : "Waiting " + t; }
+    return `<div class="st ${cls}" role="listitem"><div class="dot">${mark}</div><b>${esc(l)}</b><small class="${sub.startsWith("Overdue") ? "as-wait-late" : ""}">${sub}</small></div>`; }).join("")}</div>`;
 }
 function trackCard(a, full) {
   const w = daysWaiting(a), lim = slaFor(a.status), late = isLate(a), exp = expectedFinish(a);
@@ -1824,7 +1848,7 @@ function trackCard(a, full) {
   });
   if (a.directorSkipped) rows.splice(1, 0, `<li class="skip"><span class="n">${ic("skip", "i-sm")}</span><span><b>Director review</b><small>Skipped · ${esc(a.skipReason || SKIP_REASONS[0])}</small></span><span></span></li>`);
   future.forEach(s => rows.push(`<li><span class="n">·</span><span><b class="muted">${esc(stageLabel(a, s))}</b><small>Not started</small></span><span class="as-dur"><small class="muted">limit ${slaFor(s)}d</small></span></li>`));
-  return `<div class="card as-flush"><div class="as-tk-head ${cls}"><small>${full ? `${esc(a.id)} · ${esc(a.name)}` : "Smart tracking"}</small><h3>${esc(title)}</h3><p>${esc(sub)}</p>
+  return `<div class="card as-flush"><div class="as-tk-head ${cls}"><small>${full ? `${esc(a.id)} · ${esc(a.name)}` : "Track"}</small><h3>${esc(title)}</h3><p>${esc(sub)}</p>
       ${isOpen(a) ? `<div class="as-meter"><div class="as-meter-t" role="progressbar" aria-label="Time used at this stage" aria-valuemin="0" aria-valuemax="${lim}" aria-valuenow="${w}"><i style="width:${Math.min(100, (w / Math.max(lim, 1)) * 100)}%"></i></div>
       <div class="as-meter-m"><span>${w} of ${plural(lim, "day")} allowed</span><span>${late ? plural(w - lim, "day") + " overdue" : plural(lim - w, "day") + " left"}</span></div></div>` : ""}</div>
     <div class="as-facts"><div><small>Submitted</small><b>${esc(fmtDate(a.createdAt))}</b></div><div><small>${isOpen(a) ? "Expected completion" : "Total time"}</small><b>${esc(isOpen(a) ? fmtDate(exp) : fmtDays(total))}</b></div>
@@ -1851,20 +1875,20 @@ function viewCase(id) {
     <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-outline" type="button" data-act="print-slip" data-id="${esc(a.id)}">${ic("print", "i-sm")}Print slip</button>${ME.isSuper && !a.erased ? `<button class="btn btn-danger-o" type="button" data-act="erase" data-id="${esc(a.id)}">${ic("x", "i-sm")}Erase personal data</button>` : ""}</div></div>
   ${trackerHtml(a)}
   <div class="as-case-grid"><div class="as-stack">
-    ${a.status === "returned" ? `<div class="as-note n-warn">${ic("undo")}<span><b>Returned for correction${a.returnedBy ? " by the " + esc(a.returnedBy) : ""}:</b> ${esc(a.returnNote || "")}</span></div>` : ""}
+    ${a.status === "returned" ? `<div class="as-note n-warn">${ic("undo")}<span><b>Sent back for correction${a.returnedBy ? " by the " + esc(a.returnedBy) : ""}:</b> ${esc(a.returnNote || "")}</span></div>` : ""}
     ${a.status === "rejected" ? `<div class="as-note n-err">${ic("x")}<span><b>Rejected${a.rejectedBy ? " by the " + esc(a.rejectedBy) : ""}:</b> ${esc(a.rejectNote || "")}</span></div>` : ""}
     ${a.erased ? `<div class="as-note n-info">${ic("shield")}<span>The personal data of this application was erased. The number, amounts and history are kept for the accounts.</span></div>` : ""}
     ${card("Request", `<div class="as-cb">${kv([["Request for", a.category], [a.type === "inkind" ? "Items requested" : "Amount requested", a.type === "inkind" ? r.items : rs(r.amount)], ...(a.type === "inkind" && r.value ? [["Estimated value", rs(r.value)]] : []), ["Fund", r.fund], ["Department", a.department], ["Reason", r.description, 1]])}</div>
       ${a.type === "financial" ? `<div class="as-amounts"><div><small>Requested</small><b>${esc(rs(r.amount))}</b></div><div><small>Recommended by RM</small><b>${a.rm ? (a.rm.recommend ? esc(rs(a.rm.amount)) : "Not recommended") : "—"}</b></div><div><small>Approved by President</small><b>${esc(rs(a.approvedAmount))}</b></div><div><small>Disbursed</small><b>${esc(rs((a.execution || {}).amount))}</b></div></div>` : ""}`, typeTag(a))}
-    ${card("Applicant", `<div class="as-cb">${p ? kv([["Father / husband", p.guardian], ["Age", a.age], ["CNIC", p.cnic], ["Mobile", p.phone], ["Marital status", a.marital], ["Education", a.education], ["Address", p.address, 1]])
-      : kv([["Age", a.age], ["Marital status", a.marital], ["Education", a.education]]) + `<p class="small muted" style="margin-top:12px">${ic("shield", "i-sm")} CNIC, mobile, address and income need the <b>Applicant details</b> tick.</p>`}</div>`)}
+    ${card("Applicant", `<div class="as-cb">${p ? kv([["Father / husband", p.guardian], ["Age", a.age], ["CNIC", p.cnic], ["Mobile", p.phone], ["Marital status", a.marital], ["Education", a.education], ["Zone", a.zone], ["UC number", a.uc], ["Address", p.address, 1]])
+      : kv([["Age", a.age], ["Marital status", a.marital], ["Education", a.education], ["Zone", a.zone], ["UC number", a.uc]]) + `<p class="small muted" style="margin-top:12px">${ic("shield", "i-sm")} CNIC, mobile, address and income need the <b>Applicant details</b> tick.</p>`}</div>`)}
     ${p ? card("Household & income", `<div class="as-cb">${kv([["Household", plural(h.members || 0, "member")], ["Men / women / children", `${h.men || 0} / ${h.women || 0} / ${h.children || 0}`], ["House", (h.housing || "—") + (h.area ? ` · ${h.area} marla` : "")], ["Rent", h.housing === "Rented" ? rs(h.rent) : "—"], ["Source of income", h.incomeSource], ["Monthly income", rs(h.income)], ["Monthly expenses", rs(h.expenses)], ["Income per person", h.members ? rs(Math.round((h.income || 0) / h.members)) : "—"]])}</div>`) : ""}
     ${can("applicant") ? card("Documents", `<div class="as-cb" style="display:grid;gap:16px">${docsBy.length ? docsBy.map(x => `<div><div style="font-size:13px;font-weight:600;margin-bottom:8px">${esc(x.s.l)}</div><div class="as-files">${x.files.map(f => fileChip(f, false)).join("")}</div></div>`).join("") : '<span class="muted">No documents</span>'}</div>`, `<span class="small muted">${plural((a.docs || []).length, "file")}</span>`) : ""}
     ${a.execution ? card(a.type === "inkind" ? "Items issued" : "Payment", `<div class="as-cb">${a.type === "inkind" ? kv([["Items issued", a.execution.items, 1], ["Issue voucher (GIN) no.", a.execution.ref], ["Issued on", fmtDate(a.execution.date)], ["Received by", a.execution.receiver], ["Issued by", a.execution.by]])
       : kv([["Amount paid", rs(a.execution.amount)], ["Payment mode", a.execution.mode], ["Reference", a.execution.ref], ["Paid on", fmtDate(a.execution.date)], ["Paid by", a.execution.by]])}</div>`, '<span class="badge b-ok">Completed</span>') : ""}
     ${can("messages") ? messagesCard(a) : ""}
   </div>
-  <div class="as-stack">${actionPanel(a)}${trackCard(a, false)}${card("History", `<ol class="as-hist">${(a.history || []).slice().reverse().map(histItem).join("")}</ol>`)}</div></div>`;
+  <div class="as-stack">${actionPanel(a)}${trackCard(a, false)}${card("History", `<ol class="as-hist">${(a.history || []).slice().reverse().map(histItem).join("")}</ol>`)}<div data-akf-remarks="${esc(a.id)}"></div></div></div>`;
 }
 function actionPanel(a) {
   if (!myTurn(a)) {
@@ -1879,7 +1903,7 @@ function actionPanel(a) {
   const mc = mcBlock(a); if (mc) return `<div class="as-note n-warn">${ic("shield")}<span>${esc(mc)}</span></div>`;
   const st = stepOf(a), i = flowIdx(a, a.status), nx = (a.flow || [])[i + 1];
   const remarks = (req, ph) => `<div class="as-f"><label for="remarks"><span>Remarks${req ? '<span class="req">*</span>' : ""}</span></label><textarea class="textarea" id="remarks" maxlength="1000" placeholder="${esc(ph || "Add your remarks")}" style="min-height:84px"></textarea><span class="msg">Remarks are required for this action</span></div>`;
-  const retRej = (rej = true) => `<div class="${rej ? "as-row2" : ""}"><button class="btn btn-outline" type="button" data-act="do" data-do="return">${ic("undo", "i-sm")}Return${rej ? "" : " to Front Desk"}</button>${rej ? `<button class="btn btn-danger-o" type="button" data-act="do" data-do="reject">${ic("x", "i-sm")}Reject</button>` : ""}</div>`;
+  const retRej = (rej = true) => `<div class="${rej ? "as-row2" : ""}"><button class="btn btn-outline" type="button" data-act="do" data-do="return">${ic("undo", "i-sm")}Send back</button><span class="small muted" style="font-size:13px">After the correction it continues at this step.</span>${rej ? `<button class="btn btn-danger-o" type="button" data-act="do" data-do="reject">${ic("x", "i-sm")}Reject</button>` : ""}</div>`;
   const amountBox = (label, v) => `<div class="as-f"><label for="amt">${label}<span class="req">*</span></label><div class="as-prefix"><span>Rs</span><input class="input" id="amt" type="number" min="1" max="${esc(a.request.amount)}" step="1" value="${esc(v)}"></div><span class="help">At most the ${esc(rs(a.request.amount))} requested.</span><span class="msg">Enter an amount from 1 to ${esc(rs(a.request.amount))}</span></div>`;
   if (a.status === "dept" && nx && nx.key === "director") {
     const dir = directorOn(a.department);
@@ -1890,13 +1914,13 @@ function actionPanel(a) {
       </fieldset>
       <div class="as-f" id="skipWrap" ${dir ? "hidden" : ""}><label for="skipReason">Reason for skipping<span class="req">*</span></label>
         <select class="select" id="skipReason">${dir ? `<option value="">Choose a reason</option>` : ""}${SKIP_REASONS.map(x => `<option ${!dir && x === SKIP_REASONS[0] ? "selected" : ""}>${esc(x)}</option>`).join("")}</select><span class="msg">Choose a reason, and add remarks for “Other”</span></div>
-      <div class="as-btns"><button class="btn btn-primary btn-lg" type="button" data-act="do" data-do="forward" id="fwdBtn">${ic("send", "i-sm")}<span>${dir ? "Send to Director" : "Skip Director and send on"}</span></button>${retRej()}</div>`);
+      <div class="as-btns"><button class="btn btn-success btn-lg" type="button" data-act="do" data-do="forward" id="fwdBtn">${ic("send", "i-sm")}<span>${dir ? "Send to Director" : "Skip Director and send on"}</span></button>${retRej()}</div>`);
   }
   if (a.status === "rm") return wrap("Recommendation", `
       <div class="as-f"><span class="lbl">Your recommendation</span><div class="as-seg"><label><input type="radio" name="rec" value="yes" checked>Recommend</label><label><input type="radio" name="rec" value="no">Do not recommend</label></div></div>
       ${a.type === "financial" ? amountBox("Recommended amount", a.request.amount) : ""}
       ${remarks(false)}
-      <div class="as-btns"><button class="btn btn-primary btn-lg" type="button" data-act="do" data-do="recommend">${ic("send", "i-sm")}Send to ${esc((nx || {}).who || "next step")}</button>${retRej(false)}</div>`);
+      <div class="as-btns"><button class="btn btn-success btn-lg" type="button" data-act="do" data-do="recommend">${ic("send", "i-sm")}Send to ${esc((nx || {}).who || "next step")}</button>${retRej(false)}</div>`);
   if (st && st.final) {
     const rec = a.rm ? (a.rm.recommend ? "Recommended" + (a.type === "financial" ? " · " + rs(a.rm.amount) : "") : "Not recommended") : "No recommendation step";
     return wrap("Final approval", `<div class="as-note ${!a.rm || a.rm.recommend ? "n-ok" : "n-warn"}">${ic(!a.rm || a.rm.recommend ? "check" : "alert")}<span><b>Regional Manager:</b> ${esc(rec)}${a.rm && a.rm.note ? " – " + esc(a.rm.note) : ""}</span></div>
@@ -1925,7 +1949,7 @@ function actionPanel(a) {
   }
   // Department Head (no director step), Director and any extra approval step of the matrix
   const title = a.status === "dept" ? "Department review" : a.status === "director" ? "Director review" : esc(st.label + " – " + st.who);
-  return wrap(title, `${remarks(false)}<div class="as-btns"><button class="btn btn-primary btn-lg" type="button" data-act="do" data-do="forward">${ic("send", "i-sm")}Forward to ${esc((nx || {}).who || "next step")}</button>${retRej()}</div>`);
+  return wrap(title, `${remarks(false)}<div class="as-btns"><button class="btn btn-success btn-lg" type="button" data-act="do" data-do="forward">${ic("send", "i-sm")}Forward to ${esc((nx || {}).who || "next step")}</button>${retRej()}</div>`);
 }
 /* keep typed values in the action form when it re-renders after an upload */
 function snapshotAction() {
@@ -1952,7 +1976,7 @@ async function doAction(kind) {
   const need = (el, cond) => { const w = el && el.closest(".as-f"); if (w) w.classList.toggle("bad", cond); return cond; };
   let action = kind; const data = { note };
   if ((kind === "return" || kind === "reject") && need(remarksEl, !note)) { remarksEl.focus(); return; }
-  if (kind === "return" && !confirm("Return this application to the Front Desk for correction?")) return;
+  if (kind === "return" && !confirm("Send this application back to the Front Desk for correction?")) return;
   if (kind === "reject" && !confirm("Reject this application? This closes the case.")) return;
   if (kind === "forward" && document.querySelector("input[name=nextStep]:checked") && document.querySelector("input[name=nextStep]:checked").value === "skip") {
     const sel = $("skipReason"); if (need(sel, !sel.value || (sel.value === SKIP_REASONS[3] && !note))) { sel.focus(); return; }
@@ -1979,7 +2003,7 @@ async function doAction(kind) {
   try {
     const d = await rpc("assistance_act", { p_id: a.id, p_action: action, p_data: data }, "Not saved");
     applyRow("applications", d.id, d); V.proof = null; V.busy = false;
-    toast({ return: "Returned to Front Desk", reject: "Application rejected", forward: "Sent to the " + holder(d), skip_director: "Director skipped · sent to the " + holder(d), recommend: "Sent to the " + holder(d), approve: "Approved · sent to the " + holder(d), execute: "Case completed" }[action], "success");
+    toast({ return: "Sent back for correction", reject: "Application rejected", forward: "Sent to the " + holder(d), skip_director: "Director skipped · sent to the " + holder(d), recommend: "Sent to the " + holder(d), approve: "Approved · sent to the " + holder(d), execute: "Case completed" }[action], "success");
     inbox().length ? go("inbox") : go("case", d.id);
   } catch (e) { V.busy = false; form.querySelectorAll("button").forEach(b => { b.disabled = false; }); toast(e.shown ? e.message : erpErr(e, "Not saved"), "error"); }
 }
@@ -1997,7 +2021,7 @@ function trackMatches(list, sel) {
 function viewTrack(id) {
   if (!can("tracking")) return noAccess("Smart tracking needs the Smart tracking tick.");
   const sel = id ? getApp(id) : null, late = A.apps.filter(isLate).sort((a, b) => (daysWaiting(b) - slaFor(b.status)) - (daysWaiting(a) - slaFor(a.status)));
-  return head("Smart tracking", "Find an application by tracking ID or name" + (can("applicant") ? ", CNIC or mobile number" : "") + ".")
+  return head("Track", "Find an application by tracking ID or name" + (can("applicant") ? ", CNIC or mobile number" : "") + ".")
     + `<div class="as-search">${ic("search")}<label class="sr-only" for="tq">Search applications</label><input class="input" id="tq" value="${esc(V.trackQ)}" placeholder="e.g. AF-ISB-2026-0001${can("applicant") ? ", 34101-2345678-2 or 0301-5550101" : ""}" autocomplete="off"></div>
     <div class="as-matches" id="tqResults">${trackMatches(trackList(), sel)}</div>
     ${sel ? `<div class="as-tk"><div>${trackCard(sel, true)}</div><div class="as-stack">${can("messages") ? messagesCard(sel) : ""}${card("Latest activity", `<ol class="as-hist">${(sel.history || []).slice(-5).reverse().map(histItem).join("")}</ol>`)}</div></div>`
@@ -2010,7 +2034,7 @@ function viewMessages() {
   const all = A.apps.flatMap(a => (a.messages || []).map((m, i) => ({ a, m, i }))).filter(x => !x.a.erased).sort((x, y) => String(y.m.at).localeCompare(String(x.m.at)));
   const tosend = all.filter(x => !x.m.sent), sent = all.filter(x => x.m.sent), list = V.msgTab === "sent" ? sent : tosend;
   return head("Messages to applicants", "Prepared automatically at each step, using the templates set on the main page.")
-    + `<div class="as-note n-info" style="margin-bottom:16px">${ic("phone")}<span><b>No SMS service is connected.</b> Send each message yourself (phone, SMS or WhatsApp), then press <b>Mark as sent</b> so the next person knows.</span></div>
+    + `<div class="as-note n-info" style="margin-bottom:16px">${ic("phone")}<span><b>No SMS service is connected.</b> Send each message yourself (phone, SMS or WhatsApp), then press <b>Mark as sent</b> so the next person knows.${V.msgTab !== "sent" && tosend.length > 1 && can("messages", "edit") ? ` <button class="btn btn-outline btn-sm" type="button" data-act="msg-all">${ic("check", "i-sm")}Mark all ${Math.min(tosend.length, 200)} as sent</button>` : ""}</span></div>
     <div class="card"><div class="tabs" role="tablist"><button type="button" class="tab ${V.msgTab !== "sent" ? "on" : ""}" role="tab" aria-selected="${V.msgTab !== "sent"}" data-act="msg-tab" data-tab="tosend">To send (${tosend.length})</button><button type="button" class="tab ${V.msgTab === "sent" ? "on" : ""}" role="tab" aria-selected="${V.msgTab === "sent"}" data-act="msg-tab" data-tab="sent">Sent (${sent.length})</button></div>
     ${list.length ? list.slice(0, 200).map(({ a, m, i }) => { const p = piiOf(a); return `<div class="as-sms"><span class="ic">${ic("msg", "i-sm")}</span><div class="grow"><b>${esc(a.name)}</b> <small class="muted">· ${p && p.phone ? esc(p.phone) : can("applicant") ? "no mobile number" : "mobile hidden (Applicant details tick)"} · ${esc(a.id)} · ${esc(NOTIFY_EVENTS[m.event] || "")} · ${esc(fmtTime(m.at))}</small><p>${esc(m.text)}</p>
       <div class="acts"><button class="btn btn-outline btn-sm" type="button" data-act="copy" data-id="${esc(a.id)}" data-i="${i}">${ic("copy", "i-sm")}Copy text</button>${openBtn(a, "Open case")}${!m.sent && can("messages", "edit") ? `<button class="btn btn-primary btn-sm" type="button" data-act="msg-sent" data-id="${esc(a.id)}" data-i="${i}">${ic("check", "i-sm")}Mark as sent</button>` : ""}${m.sent ? `<span class="small muted">Sent by ${esc(m.sent.by)} · ${esc(fmtTime(m.sent.at))}</span>` : ""}</div></div></div>`; }).join("")
@@ -2031,17 +2055,22 @@ function viewReports() {
   const by = s.byStatus || {}, keys = Object.keys(by).sort((x, y) => STATUS_KEYS.indexOf(x) - STATUS_KEYS.indexOf(y));
   return head("Reports", "Figures for the whole region: counts and amounts only, no names", `<div style="display:flex;gap:8px"><button class="btn btn-outline" type="button" data-act="reload-summary">${ic("undo", "i-sm")}Refresh</button>${can("reports", "export") ? `<button class="btn btn-outline" type="button" data-act="summary-csv">${ic("download", "i-sm")}Download CSV</button>` : ""}</div>`)
     + `<div class="kpis">${k("list", "Applications", s.total, s.registeredThisMonth + " registered this month", "accent")}${k("clock", "In progress", s.open, s.overdue + " past the time limit", s.overdue ? "warn" : "")}${k("check", "Completed this month", s.completedThisMonth, "Support delivered")}${k("wallet", "Disbursed this month", esc(rs(s.disbursedThisMonthPKR)), esc(rs(s.disbursedPKR)) + " in total")}</div>
-    <div class="as-widgets">${card("By stage", `<div class="as-cb as-pipe">${keys.map(st => `<div class="as-pipe-row"><span>${esc(stageLabel({ type: "financial", flow: [] }, st).replace("Finance – disbursement", "Finance / Store"))}</span><span class="bar"><i style="width:${by[st] / Math.max(1, ...Object.values(by)) * 100}%"></i></span><b>${by[st]}</b></div>`).join("") || '<span class="muted">No applications yet</span>'}</div>`)}
-    ${card("By type", `<div class="as-cb">${Object.entries(s.byType || {}).map(([t, n]) => `<p>${t === "inkind" ? "In-kind" : "Financial"}: <b>${n}</b></p>`).join("") || '<span class="muted">—</span>'}</div>`)}
-    <section class="as-w-full">${card("By department", `<div class="as-cb"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Department</th><th>Total</th><th>In progress</th><th>Completed</th><th>Rejected</th><th>Disbursed</th></tr></thead><tbody>${(s.byDepartment || []).map(x => `<tr><td class="t-name">${esc(x.department)}</td><td>${x.total}</td><td>${x.open}</td><td>${x.completed}</td><td>${x.rejected}</td><td>${esc(rs(x.disbursedPKR))}</td></tr>`).join("")}</tbody></table></div></div>`)}</section></div>`;
+    <div class="as-widgets">${window.AKF_CHARTS ? card("By stage", `<div class="as-cb">${AKF_CHARTS.bars({ id: "as-stage", empty: "No applications yet.", items: keys.map(st => ({ key: STATUS_KEYS.includes(st) ? st : "other", label: stageLabel({ type: "financial", flow: [] }, st).replace("Finance – disbursement", "Finance / Store"), value: by[st] })) })}</div>`)
+      + card("By type", `<div class="as-cb">${AKF_CHARTS.donut({ id: "as-type", center: "applications", items: Object.entries(s.byType || {}).map(([t, n]) => ({ key: t, label: t === "inkind" ? "In-kind" : "Financial", value: n, color: t === "inkind" ? "#16A34A" : "#0A74C9" })) })}</div>`)
+      + `<section class="as-w-full">${card("Disbursed by department", `<div class="as-cb">${AKF_CHARTS.bars({ id: "as-dept", money: true, empty: "Nothing disbursed yet.", items: (s.byDepartment || []).map(x => ({ key: x.department, label: x.department, value: x.disbursedPKR, note: x.total + " applications" })) })}</div>`)}</section>`
+      + `<section class="as-w-full">${card("Applications by zone", `<div class="as-cb">${AKF_CHARTS.bars({ id: "as-zone", empty: "No applications yet.", items: zoneTotals(s.byArea).map(x => ({ key: x.zone, label: x.zone, value: x.total, note: rs(x.disbursedPKR) + " disbursed" })) })}</div>`)}</section>` : ""}${window.AKF_CHARTS ? "" : card("By stage", `<div class="as-cb as-pipe">${keys.map(st => `<div class="as-pipe-row"><span>${esc(stageLabel({ type: "financial", flow: [] }, st).replace("Finance – disbursement", "Finance / Store"))}</span><span class="bar"><i style="width:${by[st] / Math.max(1, ...Object.values(by)) * 100}%"></i></span><b>${by[st]}</b></div>`).join("") || '<span class="muted">No applications yet</span>'}</div>`)}
+    ${window.AKF_CHARTS ? "" : card("By type", `<div class="as-cb">${Object.entries(s.byType || {}).map(([t, n]) => `<p>${t === "inkind" ? "In-kind" : "Financial"}: <b>${n}</b></p>`).join("") || '<span class="muted">—</span>'}</div>`)}
+    <section class="as-w-full">${card("By department", `<div class="as-cb"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Department</th><th>Total</th><th>In progress</th><th>Completed</th><th>Rejected</th><th>Disbursed</th></tr></thead><tbody>${(s.byDepartment || []).map(x => `<tr><td class="t-name">${esc(x.department)}</td><td>${x.total}</td><td>${x.open}</td><td>${x.completed}</td><td>${x.rejected}</td><td>${esc(rs(x.disbursedPKR))}</td></tr>`).join("")}</tbody></table></div></div>`)}</section>
+    <section class="as-w-full">${card("By zone and UC", `<div class="as-cb"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Zone</th><th>UC number</th><th>Total</th><th>In progress</th><th>Completed</th><th>Rejected</th><th>Disbursed</th></tr></thead><tbody>${(s.byArea || []).map(x => `<tr><td class="t-name">${esc(x.zone)}</td><td>${esc(x.uc || "—")}</td><td>${x.total}</td><td>${x.open}</td><td>${x.completed}</td><td>${x.rejected}</td><td>${esc(rs(x.disbursedPKR))}</td></tr>`).join("") || '<tr><td colspan="7" class="muted">No applications yet</td></tr>'}</tbody></table></div></div>`)}</section></div>`;
 }
 async function loadSummary() { try { A.summary = await rpc("assistance_summary", {}, "The figures could not be loaded"); } catch (e) { A.summary = { total: 0, open: 0, overdue: 0, byStatus: {}, byDepartment: [], byType: {}, disbursedPKR: 0, disbursedThisMonthPKR: 0, completedThisMonth: 0, registeredThisMonth: 0 }; toast(e.message, "error"); } if (V.view === "reports") render(); }
 function summaryCsv() {
   const s = A.summary; if (!s || !can("reports", "export")) return;
-  const rows = [["Department", "Total", "In progress", "Completed", "Rejected", "Disbursed (Rs)"], ...(s.byDepartment || []).map(x => [x.department, x.total, x.open, x.completed, x.rejected, x.disbursedPKR])];
+  const rows = [["Department", "Total", "In progress", "Completed", "Rejected", "Disbursed (Rs)"], ...(s.byDepartment || []).map(x => [x.department, x.total, x.open, x.completed, x.rejected, x.disbursedPKR]),
+    [], ["Zone", "UC number", "Total", "In progress", "Completed", "Rejected", "Disbursed (Rs)"], ...(s.byArea || []).map(x => [x.zone, x.uc, x.total, x.open, x.completed, x.rejected, x.disbursedPKR])];
   const cell = v => { let t = String(v == null ? "" : v); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["﻿" + rows.map(r => r.map(cell).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" })); a.download = "Alkhidmat_Assistance_Report_" + todayPK() + ".csv"; document.body.append(a); a.click(); a.remove();
-  audit("EXPORTED", "report", "by department");
+  audit("EXPORTED", "report", "by department, zone and UC");
 }
 function viewAudit() {
   if (!can("audit")) return noAccess("The audit trail needs the Audit Trail tick.");
@@ -2135,9 +2164,9 @@ const NAVX = [
   { sec: "Applications" },
   { v: "dashboard", l: "Dashboard", ic: "home", ok: () => can("dashboard") },
   { v: "new", l: () => V.editId ? "Correct application" : "New application", ic: "plus", ok: () => can("applications", "add") && (ME.role === "front_desk" || ME.isSuper) },
-  { v: "inbox", l: () => ME.role === "front_desk" ? "Returned to me" : "My inbox", ic: "inbox", ok: () => can("applications") && (can("applications", "approve") || (can("applications", "add") && ME.role === "front_desk")), count: () => inbox().length },
+  { v: "inbox", l: () => ME.role === "front_desk" ? "Sent back to me" : "My inbox", ic: "inbox", ok: () => can("applications") && (can("applications", "approve") || (can("applications", "add") && ME.role === "front_desk")), count: () => inbox().length },
   { v: "all", l: "All applications", ic: "list", ok: () => can("applications") },
-  { v: "track", l: "Smart tracking", ic: "target", ok: () => can("tracking") && can("applications") },
+  { v: "track", l: "Track", ic: "target", ok: () => can("tracking") && can("applications") },
   { sec: "Follow-up" },
   { v: "messages", l: "Messages to applicants", ic: "msg", ok: () => can("messages") && can("applications"), count: () => A.apps.reduce((s, a) => s + (a.erased ? 0 : (a.messages || []).filter(m => !m.sent).length), 0) },
   { v: "notes", l: "Notifications", ic: "bell", ok: () => can("applications") || can("dashboard"), count: () => unread().length },
@@ -2180,6 +2209,11 @@ function moveNavInd() {
   const t = `translateY(${a.offsetTop}px)`, hh = a.offsetHeight + "px"; ind.style.opacity = "1"; ind.style.transform = t; ind.style.height = hh; moveNavInd.last = { t, h: hh };
 }
 /* in-page navigation: the view lives in history.state (no case numbers or names in the address bar) */
+/* Jazba charts: a click on a bar or slice opens All applications filtered to it */
+document.addEventListener("akf-chart-pick", e => {
+  const f = { "as-stage": "status", "as-dept": "dept", "as-type": "type", "as-zone": "zone" }[e.detail.chart]; if (!f || !can("applications")) return;
+  V.filter = { q: "", status: "", type: "", dept: "", zone: "", uc: "" }; V.filter[f] = e.detail.key; go("all");
+});
 function go(view, id, replace) {
   if (view === "case") V.from = V.view === "case" ? V.from : V.view;
   if (V.view === "new" && view !== "new") collectForm();
@@ -2215,12 +2249,15 @@ function hideLoader() { loaderN = Math.max(0, loaderN - 1); if (loaderN) return;
 const VIEWS = { dashboard: viewDashboard, inbox: viewInbox, all: viewAll, new: viewNew, submitted: () => viewSubmitted(V.id), case: () => viewCase(V.id), track: () => viewTrack(V.id),
   messages: viewMessages, notes: viewNotes, reports: viewReports, audit: viewAudit };
 function firstView() { const n = NAVX.find(navOK); return n ? n.v : null; }
-function render() {
+/* quiet: a live update or the tab coming back. Charts keep their place instead of growing again, which looks like blinking */
+const settle = root => root.getAnimations({ subtree: true }).forEach(a => { if (a.effect && a.effect.getTiming().iterations !== Infinity) a.finish(); });
+function render(quiet) {
   if (!ME) return;
   if (!viewAllowed(V.view)) { const v = firstView(); if (!v) { $("app").innerHTML = `<div class="card fatal"><h2>No page ticked</h2><p class="muted" style="margin-top:8px">Ask the Super Admin to tick at least one tab of ${esc(NAME)} for you on the main page.</p><a class="btn btn-primary" style="margin-top:16px" href="${esc(HOME)}">Back to all portals</a></div>`; buildChrome(); return; } V.view = v; }
   let html = "";
   try { html = VIEWS[V.view](); } catch (e) { console.error("[render]", e); html = `<div class="card">${emptyBox("alert", "This page could not be shown", "(ref " + errRef() + ")")}</div>`; }
   $("app").innerHTML = html;
+  if (quiet === true) settle($("app"));
   buildChrome();
   if (V.view === "new" && V.draft) { if (!V.flowPrev) flowPreview(); }
 }
@@ -2239,11 +2276,14 @@ document.addEventListener("click", async e => {
   if (act === "track") { if (can("tracking")) go("track", id); else go("case", id); return; }
   if (act === "note") { markRead(t.dataset.note); if (getApp(id)) go("case", id); return; }
   if (act === "read-all") { markAllRead(); render(); return; }
+  if (act === "fill-last") { const a = lastCase(), p = a && piiOf(a); if (!p || !V.draft) return; collectForm();   // the request and the documents are new each time: not copied
+    Object.assign(V.draft.applicant, { name: a.name, age: a.age, marital: a.marital, education: a.education, zone: a.zone, uc: a.uc, guardian: p.guardian, phone: p.phone, address: p.address });
+    V.draft.household = JSON.parse(JSON.stringify(p.household || { housing: "Own" })); render(); toast("Details filled from " + a.id + ". Please check them with the person.", "success"); return; }
   if (act === "discard") { if (confirm("Clear everything entered in this form? Uploaded files are removed too.")) { (V.draft ? V.draft.docs : []).forEach(f => { if (f.path.startsWith(ME.id + "/")) SB.storage.from(BUCKET).remove([f.path]).then(() => {}, () => {}); }); V.draft = null; V.editId = null; V.dup = []; V.flowPrev = null; render(); } return; }
   if (act === "do") return doAction(t.dataset.do);
   if (act === "edit-returned") {
     const a = getApp(id), p = a && piiOf(a); if (!a || !p) return toast("The applicant details are needed to correct the application", "error");
-    V.draft = JSON.parse(JSON.stringify({ applicant: { name: a.name, age: a.age, marital: a.marital, education: a.education, guardian: p.guardian, cnic: p.cnic, phone: p.phone, address: p.address },
+    V.draft = JSON.parse(JSON.stringify({ applicant: { name: a.name, age: a.age, marital: a.marital, education: a.education, zone: a.zone, uc: a.uc, guardian: p.guardian, cnic: p.cnic, phone: p.phone, address: p.address },
       household: p.household || { housing: "Own" }, request: { type: a.type, department: a.department, category: a.category, amount: a.request.amount, items: a.request.items, value: a.request.value, fund: a.request.fund, description: a.request.description },
       docs: (a.docs || []).filter(f => f.slot !== "proof").map(f => ({ slot: f.slot, path: f.path, name: f.name, type: f.type, size: f.size })) }));
     V.editId = a.id; V.dup = []; V.flowPrev = null; go("new"); return;
@@ -2255,6 +2295,11 @@ document.addEventListener("click", async e => {
   if (act === "reload-summary") { A.summary = null; render(); return; }
   if (act === "msg-tab") { V.msgTab = t.dataset.tab; render(); return; }
   if (act === "copy") { const a = getApp(id), m = a && (a.messages || [])[+t.dataset.i]; if (!m) return; try { await navigator.clipboard.writeText(m.text); toast("Message copied", "success"); } catch (x) { toast("Copy did not work: select the text and copy it", "error"); } return; }
+  if (act === "msg-all") {   // the same call as one "Mark as sent", once for each message shown
+    const todo = A.apps.filter(a => !a.erased).flatMap(a => (a.messages || []).map((m, i) => ({ a, m, i }))).filter(x => !x.m.sent).slice(0, 200);
+    if (!todo.length || !confirm("Mark all " + todo.length + " messages as sent?\n\nPress OK only if every one of them was really sent.")) return;
+    let n = 0; try { for (const x of todo) { const d = await rpc("assistance_message_sent", { p_id: x.a.id, p_index: x.i }, "Not saved"); applyRow("applications", d.id, d); n++; } } catch (x) { toast(x.message, "error"); }
+    render(); if (n) toast(n + " marked as sent", "success"); return; }
   if (act === "msg-sent") { try { const d = await rpc("assistance_message_sent", { p_id: id, p_index: +t.dataset.i }, "Not saved"); applyRow("applications", d.id, d); render(); toast("Marked as sent", "success"); } catch (x) { toast(x.message, "error"); } return; }
   if (act === "edit-dash") { V.editDash = !V.editDash; render(); return; }
   if (act === "reset-dash") { setDash(null); render(); toast("Dashboard reset", "success"); return; }
@@ -2338,7 +2383,7 @@ function aiContext() {
       messagesToSend: A.apps.reduce((s, a) => s + (a.messages || []).filter(m => !m.sent).length, 0) },
     timeLimitsDays: SET.sla,
     rules: ["Front Desk registers the application with the signed paper form; the server gives the number (AF-ISB-YYYY-NNNN)",
-      "Department Head reviews, then the Department Director (the Head may skip the Director with a reason; a director marked unavailable is skipped)",
+      "Department Head reviews, then the Department Director only if the approval matrix switches that step on (the Head may skip the Director with a reason; a director marked unavailable is skipped)",
       "Regional Manager recommends (and an amount), President gives the final approval (and the amount)", "Finance pays the approved amount (cash, cheque, bank transfer, Easypaisa, JazzCash) or the Store Officer issues the items with a GIN",
       "Any approver may return a case to the Front Desk for correction (remarks required); Department Head, Director and President may reject (reason required)",
       "Nobody acts on a case they registered or on two different steps of the same case (maker-checker)", "There is no SMS service: messages to applicants are sent by staff and marked as sent",
@@ -2370,14 +2415,17 @@ async function boot() {
   $("side-portal").textContent = NAME; $("crumb").textContent = "Alkhidmat Foundation Islamabad · " + NAME;
   $("me-name").textContent = ME.name; $("me-role").textContent = ME.label + (ME.deptName ? " · " + ME.deptName : "");
   $("me-av").textContent = String(ME.name).split(/\s+/).map(x => x[0]).slice(0, 2).join("").toUpperCase();
-  V.view = "dashboard";
+  const hm = /^#case=([\w.-]+)$/.exec(location.hash || "");   // #case=NUMBER: "Track" on the main page opens that case (the number only, removed from the address at once)
+  V.view = location.hash === "#new" && can("applications", "add") ? "new" : "dashboard";   // #new: the main page's "+" button
+  if (location.hash === "#new") try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { }
   try { history.replaceState({ akf: 1, view: "dashboard", id: null, from: "" }, "", location.pathname + location.search); } catch (e) { }
   hideLoader();
   render();
+  if (hm) { if (getApp(hm[1])) go("case", hm[1]); else toast("Case " + hm[1] + " is not in your list", "error"); }
   subscribe();
   checkOverdue(); setInterval(checkOverdue, 10 * 60 * 1000);
   /* Alkhidmat AI — every portal has it; it gets only figures, never names, phone numbers or CNIC */
-  if (window.AKF_ASSISTANT) AKF_ASSISTANT({ sb: SB, portal: NAME, user: String(ME.name).split(" ")[0], context: aiContext,
+  if (window.AKF_ASSISTANT) AKF_ASSISTANT({ sb: SB, portal: NAME, user: String(ME.name), context: aiContext,
     hints: ["What needs my attention today?", "How many cases are past their time limit?", "Explain the approval steps of an application", "How much was disbursed this month?", "How do I register a new application?"] });
   audit("LOGIN", ME.email, "Opened " + NAME);
 }

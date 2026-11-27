@@ -56,14 +56,15 @@
     if (ups.length) { const { error } = await sb.from("portal_rows").upsert(ups, { onConflict: "collection,id" }); if (error) throw error; }
     return ups.length;
   }
-  const plain = e => { const m = String((e && e.message) || ""); return m && m.length < 220 ? m : "Not saved on the server. Try again."; };
+  const plain = e => { const m = String((e && e.message) || ""); return m && m.length < 220 && !/relation|column|function|syntax|policy|violates|jsonb|null value|permission denied/i.test(m) ? m : "Not saved on the server. Try again."; };   // no table or rule names on screen
   const audit = (d, me, doc, action, comment, dept) => d.audit.unshift({ id: uid(), at: nowISO(), doc, action, comment: comment || "", dept: dept || me.dept || "", by: me.name || "", role: me.role || "", uid: me._id, desig: me.designation || "" });
   const lc = s => String(s == null ? "" : s).trim().toLowerCase();
 
   /* ---- sheets ---- */
   const VENDOR_COLS = [
     { k: "name", h: "Vendor name", req: true, ex: "Al-Shifa Traders", note: "A row with a vendor name (or NTN) already in the portal updates that vendor" },
-    { k: "ntn", h: "NTN", req: true, ex: "1234567-8", pattern: /^\d{7}-\d$/, patternMsg: "must look like 1234567-8", aka: ["ntnno"] },
+    { k: "ntn", h: "NTN", req: true, ex: "1234567-8", pattern: /^(\d{7}(-?\d)?|[A-Za-z]\d{6}(-?\d)?|\d{5}-?\d{7}-?\d)$/, patternMsg: "must look like 1234567-8, G645842 or a 13-digit CNIC", aka: ["ntnno"] },
+    { k: "owner", h: "Owner name", ex: "Muhammad Ali", note: "Owner / proprietor full name", aka: ["ownername", "proprietor"] },
     { k: "contact", h: "Contact", ex: "0300-1234567", note: "Phone number" },
     { k: "bank", h: "Bank & account", ex: "HBL 1234-5678-9012", aka: ["bankaccount"] },
     { k: "type", h: "Supplies", list: ["Goods", "Services"], ex: "Goods", note: "Empty: Goods", aka: ["suppliesgoodsservices"] },
@@ -79,12 +80,12 @@
     { k: "donor", h: "Donor", list: DONORS, ex: "Disaster", note: "Empty: General Fund" },
     { k: "allocated", h: "Allocated (PKR)", req: true, type: "number", min: 1, ex: 500000, aka: ["allocated"] },
     { k: "note", h: "Note", ex: "Flood response phase 2" }];
-  const vendorRow = v => ({ name: v.name, ntn: v.ntn, contact: v.contact, bank: v.bank, type: v.type, filer: v.filer === false ? "Non-Filer" : "Filer", gst: v.gstRegistered !== false, category: v.category, cheque: !!v.cheque, address: v.address, email: v.email });
+  const vendorRow = v => ({ name: v.name, owner: v.owner || "", ntn: v.ntn, contact: v.contact, bank: v.bank, type: v.type, filer: v.filer === false ? "Non-Filer" : "Filer", gst: v.gstRegistered !== false, category: v.category, cheque: !!v.cheque, address: v.address, email: v.email });
   /* the record the portal keeps; an update keeps every field the file does not have */
   function vendorRec(x, base) {
     const d = x.data, has = k => k in d && d[k] !== "" && d[k] != null, o = base ? { ...base } : { name: "", ntn: "", bank: "", contact: "", type: "Goods", filer: true, gstRegistered: true, cheque: false, category: "OTHER", rating: 3, address: "", email: "" };
     o.name = d.name; o.ntn = d.ntn;
-    ["contact", "bank", "address", "email"].forEach(k => { if (k in d) o[k] = d[k] || (base ? "" : o[k]); });
+    ["owner", "contact", "bank", "address", "email"].forEach(k => { if (k in d) o[k] = d[k] || (base ? "" : o[k]); });
     if (has("type")) o.type = d.type;
     if (has("filer")) o.filer = d.filer !== "Non-Filer";
     if (has("gst")) o.gstRegistered = d.gst !== false;
@@ -97,6 +98,10 @@
     name: "Procurement",
     async load(sb) {
       const S = await readRows(sb, ["vendors", "budgets"]);
+      // the real departments (main page → Departments) replace the sample list, as in the portal
+      const { data: cd } = await sb.from("core_departments").select("name,active").order("name");
+      const real = (cd || []).filter(x => x.active !== false && String(x.name || "").trim().length >= 2).map(x => String(x.name).trim());
+      if (real.length) BUDGET_COLS.find(c => c.k === "dept").list = [...real, "OTHER"];
       const findVendor = (st, name, ntn) => st.vendors.find(v => lc(v.name) === lc(name)) || (ntn ? st.vendors.find(v => v.ntn && v.ntn === ntn) : null) || null;
       const findBudget = (st, code) => st.budgets.find(b => b.code === String(code || "").toUpperCase().trim()) || null;
       const sheets = [

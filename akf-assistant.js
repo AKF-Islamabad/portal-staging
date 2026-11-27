@@ -12,9 +12,11 @@
   "use strict";
   if (window.AKF_ASSISTANT) return;
   const CSS = `
-.kai-fab{position:fixed;right:20px;bottom:20px;z-index:8000;display:flex;align-items:center;gap:9px;height:52px;padding:0 20px 0 16px;border:0;border-radius:99px;cursor:pointer;color:#fff;font:700 14.5px/1 "Segoe UI Variable Text","Segoe UI",Inter,system-ui,sans-serif;
+.kai-fab{position:fixed;right:20px;bottom:20px;z-index:8000;display:flex;align-items:center;gap:0;height:52px;padding:0 16px;border:0;border-radius:99px;cursor:pointer;color:#fff;font:700 14.5px/1 "Segoe UI Variable Text","Segoe UI",Inter,system-ui,sans-serif;
   background:linear-gradient(135deg,#1A66CC 0%,#0B51A7 45%,#06368A 100%);box-shadow:0 14px 30px -10px rgba(11,81,167,.7);transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s}
-.kai-fab:hover{transform:translateY(-2px) scale(1.03)} .kai-fab svg{width:20px;height:20px}
+.kai-fab:hover{transform:translateY(-2px) scale(1.03)} .kai-fab svg{width:20px;height:20px;flex:none}
+.kai-fab span{max-width:0;overflow:hidden;white-space:nowrap;transition:max-width .3s,margin .3s}   /* a round button that keeps clear of the cards; the label slides out on hover or keyboard focus */
+.kai-fab:hover span,.kai-fab:focus-visible span{max-width:170px;margin:0 4px 0 9px}
 .kai-fab::after{content:"";position:absolute;inset:-4px;border-radius:inherit;border:2px solid rgba(25,194,174,.55);animation:kaiPulse 2.6s ease-out infinite;pointer-events:none}
 @keyframes kaiPulse{0%{transform:scale(.92);opacity:1}100%{transform:scale(1.25);opacity:0}}
 .kai-panel{position:fixed;right:20px;bottom:20px;z-index:8001;width:min(430px,calc(100vw - 24px));height:min(640px,calc(100vh - 40px));display:flex;flex-direction:column;overflow:hidden;
@@ -48,9 +50,17 @@
 .kai-portals{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px} .kai-portals button{border:1px solid var(--line,var(--border,#CDD7E5));background:var(--card,var(--surface,#fff));color:#0B51A7;border-radius:99px;padding:6px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer} .kai-portals button:hover{border-color:#1A66CC;background:rgba(26,102,204,.06)}
 .kai-fab[hidden],.kai-panel[hidden]{display:none!important}
 @media print{ .kai-fab,.kai-panel{display:none!important} }
+.kai-tbl{width:100%;border-collapse:collapse;margin:6px 0;font-size:12.5px;display:block;overflow-x:auto} .kai-tbl th,.kai-tbl td{border:1px solid var(--line,var(--border,#E3E9F2));padding:4px 6px;text-align:left;white-space:nowrap} .kai-tbl th{background:rgba(11,81,167,.07)}
+.kai-act{margin-top:8px;padding:10px;border-radius:12px;border:1px solid color-mix(in srgb,#1A66CC 35%,transparent);background:color-mix(in srgb,#1A66CC 7%,transparent)}
+.kai-act b{display:block;margin-bottom:6px} .kai-act .row{display:flex;gap:8px;margin-top:8px}
+.kai-act button{border:1px solid var(--line,var(--border,#E3E9F2));border-radius:10px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:var(--card,var(--surface,#fff));color:inherit}
+.kai-act button.ok{border:0;color:#fff;background:linear-gradient(135deg,#1A66CC,#0B51A7)} .kai-act button:disabled{opacity:.55;cursor:default}
+.kai-fab.busy::after{border-color:rgba(255,178,91,.95);animation:kaiSpin 1s linear infinite;border-style:dashed}
+@keyframes kaiSpin{to{transform:rotate(360deg)}}
+.kai-fab .kai-ready{position:absolute;top:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:#16A34A;border:2px solid #fff;max-width:none!important;margin:0!important}
 @media (prefers-reduced-motion: reduce){ .kai-fab::after,.kai-panel,.kai-msg{animation:none!important} }`;
   const NS = "http://www.w3.org/2000/svg";
-  const ICON = { spark: "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z", x: "M18 6L6 18M6 6l12 12", send: "M22 2L11 13M22 2l-7 20-4-9-9-4z", undo: "M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3" };
+  const ICON = { spark: "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z", x: "M18 6L6 18M6 6l12 12", min: "M5 12h14", send: "M22 2L11 13M22 2l-7 20-4-9-9-4z", undo: "M9 14L4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3" };
   const svg = n => { const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("fill", "none"); s.setAttribute("stroke", "currentColor"); s.setAttribute("stroke-width", "2"); s.setAttribute("stroke-linecap", "round"); s.setAttribute("stroke-linejoin", "round"); s.setAttribute("width", "18"); s.setAttribute("height", "18"); s.setAttribute("aria-hidden", "true"); const p = document.createElementNS(NS, "path"); p.setAttribute("d", ICON[n]); s.append(p); return s; };
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
   /* safe formatting: the answer is shown as text; only **bold**, `code` and "- " lists are turned into elements */
@@ -63,9 +73,17 @@
     }
   }
   function format(text) {
-    const box = el("div"); let ul = null;
+    const box = el("div"); let ul = null, tbl = null;
     for (const raw of String(text).split(/\r?\n/)) {
       const line = raw.replace(/^#{1,6}\s+/, "");
+      /* markdown table rows: | a | b | (the |---| line only starts the body) */
+      if (/^\s*\|.*\|\s*$/.test(line)) {
+        ul = null; const cells = line.trim().slice(1, -1).split("|").map(c => c.trim());
+        if (cells.every(c => /^:?-{2,}:?$/.test(c))) continue;
+        const head = !tbl; if (head) { tbl = el("table", "kai-tbl"); box.append(tbl); }
+        const tr = el("tr"); cells.forEach(c => { const td = el(head ? "th" : "td"); inline(td, c); tr.append(td); }); tbl.append(tr); continue;
+      }
+      tbl = null;
       if (/^\s*([-*•]|\d+[.)])\s+/.test(line)) { if (!ul) { ul = el("ul"); box.append(ul); } const li = el("li"); inline(li, line.replace(/^\s*([-*•]|\d+[.)])\s+/, "")); ul.append(li); continue; }
       ul = null; if (!line.trim()) continue;
       const p = el("p"); if (/^#{1,6}\s/.test(raw)) { const b = el("b"); inline(b, line); p.append(b); } else inline(p, line); box.append(p);
@@ -80,6 +98,8 @@
     const history = [];   // this tab only, never saved
     const fab = el("button", "kai-fab"); fab.type = "button"; fab.setAttribute("aria-label", "Open Alkhidmat AI assistant"); fab.append(svg("spark"), el("span", "", "Ask Alkhidmat AI"));
     let panel = null, log, input, sendBtn, chips, busy = false;
+    const fabState = () => { fab.classList.toggle("busy", busy); fab.setAttribute("aria-label", busy ? "Alkhidmat AI is working on your question (open)" : "Open Alkhidmat AI assistant"); };
+    const readyDot = on => { let d = fab.querySelector(".kai-ready"); if (on && !d) { d = el("span", "kai-ready"); d.setAttribute("aria-hidden", "true"); fab.append(d); } else if (!on && d) d.remove(); };
     const add = (who, text, cls) => { const m = el("div", "kai-msg " + (cls || (who === "me" ? "me" : "bot"))); if (who === "me") m.textContent = text; else m.append(format(text)); log.append(m); log.scrollTop = log.scrollHeight; return m; };
     /* the portal guide: the person's portals and tabs, straight from the database (instant, no AI and no key needed) */
     let guideP = null;
@@ -106,17 +126,36 @@
         g.forEach(p => { const b = el("button", "", p.name); b.type = "button"; b.addEventListener("click", () => { add("me", p.name); add("bot", portalText(p)); }); row.append(b); });
         m.append(row); log.scrollTop = log.scrollHeight; });
     };
+    /* a change the AI prepared: nothing happens until the person presses Confirm; the server runs it with their own
+       rights and logs who, what and when */
+    function confirmBox(a) {
+      const box = el("div", "kai-act"); box.append(el("b", "", a.summary || "Make this change?"));
+      const ok = el("button", "ok", "Confirm"), no = el("button", "", "Cancel"); ok.type = no.type = "button";
+      const row = el("div", "row"); row.append(ok, no); box.append(row);
+      no.addEventListener("click", () => { box.replaceChildren(el("span", "", "Cancelled. Nothing was changed.")); });
+      ok.addEventListener("click", async () => {
+        ok.disabled = no.disabled = true; ok.textContent = "Saving…";
+        try {
+          const { data, error } = await o.sb.functions.invoke("ai-chat", { body: { execute: { name: a.name, args: a.args } } });
+          if (error) { let b = {}; try { b = await error.context.json(); } catch (e) { } throw new Error((b.error || "The change was not saved.") + (b.ref ? ` (ref ${b.ref})` : "")); }
+          const r = data && data.result, id = (a.args && a.args.p_id) || (r && (r.no || r.id)) || "";
+          box.replaceChildren(el("b", "", "Done" + (id ? ": " + id : ".")));
+          history.push({ role: "assistant", text: "Done: " + (a.summary || a.name) });
+        } catch (e) { ok.disabled = no.disabled = false; ok.textContent = "Confirm"; box.append(el("div", "", String(e.message || e))); }
+      });
+      return box;
+    }
     async function ask(text) {
       const q = String(text || input.value).trim(); if (!q || busy) return;
-      input.value = ""; input.style.height = "46px"; if (chips) chips.hidden = true; add("me", q); busy = true; sendBtn.disabled = true;
+      input.value = ""; input.style.height = "46px"; if (chips) chips.hidden = true; add("me", q); busy = true; sendBtn.disabled = true; fabState();
       const wait = el("div", "kai-msg bot"); const d = el("span", "kai-dots"); d.append(el("i"), el("i"), el("i")); wait.append(d); log.append(wait); log.scrollTop = log.scrollHeight;
-      let answer = null, note = null, off = false;
+      let answer = null, note = null, off = false, action = null;
       try {
         if (!o.sb || !o.sb.functions) throw { code: "offline" };
         let ctx = ""; try { ctx = typeof o.context === "function" ? String(o.context() || "") : String(o.context || ""); } catch (e) { ctx = ""; }
         const { data, error } = await o.sb.functions.invoke("ai-chat", { body: { portal, question: q, history: history.slice(-10), context: ctx.slice(0, 10000) } });
         if (error) { let b = {}; try { b = await error.context.json(); } catch (e) { } throw { code: b.code || "", message: b.error || "", ref: b.ref || "" }; }
-        answer = (data && data.answer) || "";
+        answer = (data && data.answer) || ""; action = data && data.action;
       } catch (e) {
         const local = typeof o.local === "function" ? (() => { try { return o.local(q); } catch (x) { return null; } })() : null;
         const why = e && e.code === "not_configured" ? (e.message || "The AI assistant is not switched on yet.") : e && e.code === "offline" ? "" : (e && e.message) || "The AI service could not be reached. Please try again.";
@@ -128,19 +167,24 @@
         off = e && e.code === "not_configured";
       }
       wait.remove(); const m = add("bot", answer); if (note) add("bot", note, "note");
+      if (action && action.name) m.append(confirmBox(action));
       /* the Super Admin can switch it on straight away (the page passes onSetup only for the Super Admin) */
       if (off && typeof o.onSetup === "function") { const b = el("button", "kai-setup", "Open AI settings"); b.type = "button"; b.addEventListener("click", () => { panel.hidden = true; fab.hidden = false; o.onSetup(); }); m.append(b); }
       history.push({ role: "user", text: q }, { role: "assistant", text: answer });
-      busy = false; sendBtn.disabled = false; input.focus();
+      busy = false; sendBtn.disabled = false; fabState();
+      if (panel.hidden) readyDot(true); else input.focus();   // minimized: a green dot says the answer is ready
     }
     function open() {
-      if (panel) { panel.hidden = false; fab.hidden = true; input.focus(); return; }
+      readyDot(false);
+      if (panel) { panel.hidden = false; fab.hidden = true; log.scrollTop = log.scrollHeight; input.focus(); return; }
       panel = el("section", "kai-panel"); panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Alkhidmat AI assistant");
       const head = el("div", "kai-head"), ic = el("span", "ic"); ic.append(svg("spark"));
       const t = el("div", "t"); t.append(el("b", "", "Alkhidmat AI"), el("small", "", `${portal} · help with the ERP portals`));
       const clear = el("button"); clear.type = "button"; clear.title = "New chat"; clear.setAttribute("aria-label", "Start a new chat"); clear.append(svg("undo"));
       const close = el("button"); close.type = "button"; close.title = "Close"; close.setAttribute("aria-label", "Close the assistant"); close.append(svg("x"));
-      head.append(ic, t, clear, close);
+      const mini = el("button"); mini.type = "button"; mini.title = "Minimize (keeps working)"; mini.setAttribute("aria-label", "Minimize the assistant; it keeps working"); mini.append(svg("min"));
+      mini.addEventListener("click", () => { panel.hidden = true; fab.hidden = false; fabState(); fab.focus(); });
+      head.append(ic, t, clear, mini, close);
       log = el("div", "kai-log"); log.setAttribute("role", "log"); log.setAttribute("aria-live", "polite");
       chips = el("div", "kai-chips"); hints.slice(0, 6).forEach(h => { const b = el("button", "", h); b.type = "button"; b.addEventListener("click", () => ask(h)); chips.append(b); });
       const form = el("form", "kai-in"); input = el("textarea"); input.rows = 1; input.maxLength = 6000; input.placeholder = "Ask about any portal…"; input.setAttribute("aria-label", "Your question");

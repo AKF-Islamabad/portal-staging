@@ -14,7 +14,7 @@
   const SVG = d => { const ns = "http://www.w3.org/2000/svg", s = document.createElementNS(ns, "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("fill", "none");
     s.setAttribute("stroke", "currentColor"); s.setAttribute("stroke-width", "2"); s.setAttribute("stroke-linecap", "round"); s.setAttribute("stroke-linejoin", "round"); s.setAttribute("aria-hidden", "true");
     const p = document.createElementNS(ns, "path"); p.setAttribute("d", d); s.append(p); return s; };
-  const ICON = { home: "M3 11l9-8 9 8M5 10v10h14V10", search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3", spark: "M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8z", dot: "M12 12h.01" };
+  const ICON = { home: "M3 11l9-8 9 8M5 10v10h14V10", search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3", spark: "M12 3l1.8 4.7 4.7 1.8-4.7 1.8L12 16l-1.8-4.7-4.7-1.8 4.7-1.8z", dot: "M12 12h.01", bell: "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0" };
   const safeLink = u => { try { const x = new URL(String(u || ""), BASE); return x.origin === location.origin ? x.href : null; } catch (e) { return null; } };
 
   /* the portal's own menu: Procurement/Store/Tasks (aside.side nav.nav) or Donor/Fleet/Assistance (#nav .nav-item) */
@@ -25,20 +25,52 @@
   // the original is re-rendered often, so find it again by its label at click time
   const proxy = (label, list) => () => { const o = list().find(b => labelOf(b) === label); if (o) o.click(); };
 
-  let rail, mine, portalsBox, acct, portals = [];
+  let rail, mine, acct, strip, stripLinks, meBox, portals = [];
+  const sh = () => { if (!strip) return; document.documentElement.style.setProperty("--jz-strip-h", strip.offsetHeight + "px");
+    const r = strip.querySelector(".jz-ts-portals"); if (!r) return;
+    r.classList.remove("tight"); r.classList.toggle("tight", r.scrollWidth > r.clientWidth + 2);   // row full: smaller names first
+    r.classList.toggle("more", r.scrollWidth > r.clientWidth + 2); };   // still full: fade the edge, the row moves sideways
+  // the signed-in person, read from the portal's own account button: full name and designation / role
+  const meOf = () => { const n = document.querySelector(".me-t b, #me-name"), r = document.querySelector(".me-t span, #me-role");
+    return [(n && n.textContent || "").trim(), (r && r.textContent || "").trim()]; };
   function build() {
     rail = el("nav", "jz-rail jz-shell-rail"); rail.setAttribute("aria-label", "Jazba"); rail.tabIndex = 0;
-    const logo = el("a", "jz-rail-logo"); logo.href = BASE; logo.title = "Today";
-    const img = el("img"); img.src = BASE + "icon.jpg"; img.alt = "Alkhidmat logo"; img.width = 44; img.height = 44;
-    const t = el("span", "jz-rail-text"); t.append(el("b", "", "Alkhidmat Foundation Islamabad"), el("small", "", "JAZBA"));
-    logo.append(img, t);
-    const today = el("a", "jz-rail-link"); today.href = BASE; today.title = "Today"; today.append(SVG(ICON.home), el("span", "jz-rail-text", "Today"));
-    const search = el("button", "jz-rail-link"); search.type = "button"; search.title = "Search (Ctrl K)"; search.append(SVG(ICON.search), el("span", "jz-rail-text", "Search & AI"));
-    search.addEventListener("click", openPalette);
-    portalsBox = el("div"); mine = el("div"); acct = el("div", "jz-shell-acct");
-    rail.append(logo, today, search, portalsBox, el("div", "jz-rail-h", "In this portal"), mine, acct);
-    document.body.prepend(rail);
-    document.addEventListener("pointerdown", e => { if (!rail.contains(e.target) && rail.contains(document.activeElement)) document.activeElement.blur(); });
+    mine = el("div"); acct = el("div", "jz-shell-acct");
+    // the portals, Today and Search live once, in the top strip; the ☰ menu holds only this portal's own pages
+    rail.append(el("div", "jz-rail-h", "In this portal"), mine, acct);
+    // the rail is hidden so the portal uses the full width; every portal sits in a strip at the top, ☰ slides the rail out
+    strip = el("div", "jz-topstrip"); strip.setAttribute("role", "navigation"); strip.setAttribute("aria-label", "All portals");
+    const menu = el("button", "jz-ts-menu"); menu.type = "button"; menu.setAttribute("aria-label", "Menu: pages of this portal"); menu.setAttribute("aria-expanded", "false"); menu.title = "Menu";
+    menu.append(SVG("M4 6h16M4 12h16M4 18h16"));
+    menu.addEventListener("click", () => setOpen(!document.documentElement.classList.contains("jz-rail-open")));
+    const home = el("a", "jz-ts-home"); home.href = BASE; home.title = "Today (main page)"; const hi = el("img"); hi.src = BASE + "icon.jpg"; hi.alt = "Alkhidmat · Today"; hi.width = 30; hi.height = 30; home.append(hi);
+    stripLinks = el("div", "jz-ts-portals");
+    const find = el("button", "jz-ts-search"); find.type = "button"; find.title = "Search (Ctrl K)"; find.setAttribute("aria-label", "Search and ask Alkhidmat AI"); find.append(SVG(ICON.search)); find.addEventListener("click", openPalette);
+    meBox = el("div", "jz-ts-me"); meBox.setAttribute("aria-label", "Signed in as · click for my signature");
+    meBox.style.cursor = "pointer"; meBox.addEventListener("click", () => { if (window.AKF_SIGN) AKF_SIGN.open(); });   // add or change my signature
+    // the same all-portal bell as the Today page, so it is there in every portal; a click opens that portal and record (akf-desk.js)
+    const bell = el("button", "jz-ts-search jz-ts-bell"); bell.type = "button"; bell.title = "All notifications"; bell.setAttribute("aria-label", "All notifications from every portal");
+    const badge = el("span", "jz-ts-badge"); badge.hidden = true; bell.append(SVG(ICON.bell), badge);
+    bell.addEventListener("click", () => window.AKF_DESK && AKF_DESK.openInbox && AKF_DESK.openInbox(bell));
+    const count = n => { badge.hidden = !n; badge.textContent = n > 99 ? "99+" : String(n); bell.setAttribute("aria-label", n + " notifications from every portal"); };
+    document.addEventListener("akf-inbox", e => count(e.detail.count || 0));
+    if (window.AKF_DESK && AKF_DESK.inbox) count(AKF_DESK.inbox().length);   // the list may have arrived before this strip
+    strip.append(menu, home, stripLinks, meBox, bell, find);
+    document.body.prepend(rail); document.body.prepend(strip);
+    // the strip's height (one or two rows of portal names): sticky page headers and the menu sit just below it
+    sh(); addEventListener("resize", sh);
+    if (window.ResizeObserver) new ResizeObserver(sh).observe(strip);
+    const setOpen = (on, focus = true) => { clearTimeout(hideT); document.documentElement.classList.toggle("jz-rail-open", on); menu.setAttribute("aria-expanded", String(on)); if (on && focus) rail.focus(); };
+    // auto open / hide with a mouse: point at ☰ or the left edge to open, move away to hide (touch and keyboard: ☰ click)
+    let hideT = 0;
+    if (matchMedia("(hover: hover)").matches) {
+      const edge = el("div", "jz-edge"); edge.setAttribute("aria-hidden", "true"); document.body.append(edge);
+      const show = () => setOpen(true, false), later = () => { clearTimeout(hideT); hideT = setTimeout(() => { if (rail.contains(document.activeElement)) document.activeElement.blur(); setOpen(false); }, 350); };
+      [menu, edge, rail].forEach(x => { x.addEventListener("pointerenter", x === rail ? () => clearTimeout(hideT) : show); x.addEventListener("pointerleave", later); });
+    }
+    document.addEventListener("pointerdown", e => { if (!rail.contains(e.target) && !menu.contains(e.target)) setOpen(false); });
+    addEventListener("keydown", e => { if (e.key === "Escape" && document.documentElement.classList.contains("jz-rail-open")) { setOpen(false); menu.focus(); } });
+    rail.addEventListener("click", e => { if (e.target.closest("a,button")) setOpen(false); });
   }
   function paintMine() {
     if (!mine) return;
@@ -46,6 +78,13 @@
     if (!document.documentElement.dataset.jzFamily && document.querySelector(".shell")) document.documentElement.dataset.jzFamily = "app";
     // Donor/Fleet/Assistance share one design kit (#sidebar + .main)
     else if (!document.documentElement.dataset.jzFamily && document.getElementById("sidebar")) document.documentElement.dataset.jzFamily = "kit";
+    // the sign-out clock changes the page every second: rebuild only when the menu itself changed (no flicker, focus stays)
+    // a portal empties its own name box for a moment while it redraws (every second with the sign-out clock): keep the last
+    // known name, so the top bar does not blink (seen on phones, 7-Nov)
+    let who = meOf(); if (who[0]) paintMine.who = who; else if (paintMine.who) who = paintMine.who;
+    const sig = navItems().map(b => labelOf(b) + "|" + b.classList.contains("active") + "|" + countOf(b)).concat(accountItems().map(labelOf), who).join("\n");
+    if (sig === paintMine.sig) return; paintMine.sig = sig;
+    meBox.replaceChildren(...(who[0] ? [el("b", "", who[0]), el("small", "", who[1])] : [])); meBox.title = who.filter(Boolean).join(" · ");
     mine.replaceChildren(...navItems().map(b => {
       const label = labelOf(b); if (!label) return null;
       const a = el("button", "jz-rail-link" + (b.classList.contains("active") ? " on" : "")); a.type = "button"; a.title = label;
@@ -59,15 +98,18 @@
       a.addEventListener("click", proxy(label, accountItems)); return a; }).filter(Boolean));
   }
   function paintPortals() {
-    portalsBox.replaceChildren(); if (!portals.length) return;
-    portalsBox.append(el("div", "jz-rail-h", "Portals"));
+    stripLinks.replaceChildren(); if (!portals.length) return sh();
     portals.forEach(p => { const href = safeLink(p.url); if (!href) return;
       const here = location.href.startsWith(href);
-      const a = el("a", "jz-rail-link" + (here ? " on" : "")); a.href = href; a.title = p.name;
       const dot = el("span", "jz-rail-dot"); dot.style.background = /^#[0-9a-f]{6}$/i.test(p.color || "") ? p.color : "#0060AE";
-      a.append(dot, el("span", "jz-rail-text", p.name)); portalsBox.append(a);
       if (here) document.documentElement.style.setProperty("--jz-pc", dot.style.background);
+      const s = el("a", "jz-ts-link" + (here ? " on" : "")); s.href = href; s.title = p.name; s.setAttribute("aria-label", p.name); if (here) s.setAttribute("aria-current", "page");
+      // one tidy row: names without the word "Management" (full name on hover and for screen readers)
+      s.append(dot, el("span", "", p.name.replace(/ +Management$/i, "") || p.name)); stripLinks.append(s);
+      if (here) requestAnimationFrame(() => { stripLinks.scrollLeft = Math.max(0, s.offsetLeft - 40); });   // phones: this portal visible in the one-row list
     });
+    stripLinks.onwheel = e => { if (stripLinks.scrollWidth > stripLinks.clientWidth && e.deltaY && !e.deltaX) { stripLinks.scrollLeft += e.deltaY; e.preventDefault(); } };   // mouse wheel moves the row sideways when it does not fit
+    sh();
   }
 
   /* Ctrl/Cmd+K: this portal's pages, other portals, Ask Alkhidmat AI (opens the portal's own assistant) */
@@ -104,13 +146,30 @@
   }
   addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && (e.key || "").toLowerCase() === "k" && rail && innerWidth >= 821) { e.preventDefault(); openPalette(); } });
 
+  // Programmes of Alkhidmat Foundation Islamabad: one line at the foot of every portal page, as on the main page
+  const PROGS = [["disaster", "Disaster Management", "#ff5e22"], ["health", "Health Services", "#ff301a"], ["education", "Education Program", "#cd3099"], ["wash", "WASH", "#04a0de"],
+    ["orphan", "Orphan Care Program", "#a2cd44"], ["community", "Community Services", "#23c2cb"], ["microfinance", "Islamic Microfinance", "#0460b3"], ["banoqabil", "Bano Qabil", "#1f6b33"]];
+  let foot;
+  function paintFoot() {
+    const m = document.querySelector(".main"); if (!m) return;   // no page frame yet (sign-in screen)
+    if (!foot) { foot = el("footer", "jz-prog-foot"); foot.setAttribute("aria-label", "Programmes of Alkhidmat Foundation Islamabad");
+      PROGS.forEach(([id, name, c]) => { const s = el("span"), i = el("img"); i.src = BASE + "home/svc-" + id + ".png"; i.alt = ""; i.width = i.height = 22; i.loading = "lazy";
+        s.style.setProperty("--pc", c); s.tabIndex = 0; s.setAttribute("role", "button"); s.append(i, name); foot.append(s); }); }
+    if (m.lastElementChild !== foot) m.append(foot);   // the portal redraws its page: keep the line last
+    const b = document.querySelector(".bnav");   // phones: the line sits just above the portal's bottom menu, when it has one
+    document.documentElement.style.setProperty("--jz-nav-h", (b ? b.offsetHeight : 0) + "px");
+  }
+
   function start() {
-    build(); paintMine();
+    build(); paintMine(); paintFoot(); addEventListener("resize", paintFoot);
     // the portal re-renders its menu often: repaint the copy on the next frame after any change
     let raf = 0; new MutationObserver(recs => { if (recs.every(r => rail.contains(r.target) || r.target === rail)) return;   // our own repaint is not a portal change
-      cancelAnimationFrame(raf); raf = requestAnimationFrame(paintMine); })
+      cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { paintMine(); paintFoot(); }); })
       .observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["class"] });
-    if (window.AKF_DESK && AKF_DESK.portals) AKF_DESK.portals().then(p => { portals = p || []; paintPortals(); }).catch(() => {});
+    // the sign-in may still be loading on the first try: ask again a few times until the list arrives
+    const load = n => window.AKF_DESK && AKF_DESK.portals && AKF_DESK.portals().then(p => { portals = p || []; paintPortals(); if (!portals.length && n) setTimeout(() => load(n - 1), 3000); })
+      .catch(() => { if (n) setTimeout(() => load(n - 1), 3000); });
+    load(5);
   }
   if (document.readyState === "loading") addEventListener("DOMContentLoaded", start); else start();
 })();

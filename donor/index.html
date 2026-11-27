@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!-- Donor Management — one of the Alkhidmat Foundation Islamabad portals. Built by erp/tools/build-donor.js from erp/src/donor-app.html.
      Scripts allowed: this page's own (by hash, refreshed by tools/csp-hash.js on deploy), config.js, ../akf-gate.js and pinned supabase-js. Data only to Supabase. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net 'sha256-Ovsc7wZc/kr+SZM6+f5RJiXPE+JkAT02qS624mh6cBQ=' 'sha256-siwLfQqyyHOFPNXprGVuyZdxkQd0dk885YdDhiQN6cU='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self'; media-src 'none'; form-action 'none'; base-uri 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://cdn.jsdelivr.net/npm/xlsx@0.18.5/ https://cdn.jsdelivr.net/npm/jsqr@1.4.0/ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/ 'sha256-Ovsc7wZc/kr+SZM6+f5RJiXPE+JkAT02qS624mh6cBQ=' 'sha256-1wcX0N93SpD+qPEI4hArTXSmGT1i5rjnG7vVc7W1L7A='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self'; media-src 'none'; form-action 'none'; base-uri 'self'; object-src 'none'; frame-src 'none'; worker-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <style id="no-frame">html{display:none!important}</style>
 <script>if(window.self===window.top){var nf=document.getElementById("no-frame");nf.parentNode.removeChild(nf);}else{try{window.top.location=window.self.location;}catch(e){}}</script>
@@ -1132,7 +1132,7 @@ html.side-pinned .side-pin{background:#fff;color:#0B3D91}
       <form class="top-search" id="top-search" role="search"><span data-icon="search"></span><input class="input" name="q" type="search" placeholder="Search donors by name, CNIC, phone…" aria-label="Search donors" maxlength="80"><kbd>/</kbd></form>
       <span class="session-chip" id="session-chip" title="Automatic sign-out after inactivity"><span data-icon="clock"></span><span class="lbl">Auto sign-out</span> <b id="session-left" class="num"></b></span>
       <button class="btn btn-secondary btn-sm hidden" data-act="switch-role" id="switch-role" title="Testing mode: sign in as another role"><span data-icon="swap"></span><span class="lbl">Switch role</span></button>
-      <div class="bell-wrap"><button class="btn-icon bell" data-act="bell" id="bell-btn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false"><span data-icon="bell"></span><span class="bell-count hidden" id="bell-count">0</span></button>
+      <div class="bell-wrap" hidden><button class="btn-icon bell" data-act="bell" id="bell-btn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false"><span data-icon="bell"></span><span class="bell-count hidden" id="bell-count">0</span></button>
         <div class="bell-panel hidden" id="bell-panel" role="dialog" aria-label="Notifications"></div></div>
       <button class="btn-icon motion-btn" data-act="motion" id="motion-btn" aria-label="Animations" title="Animations"><span data-icon="zap"></span></button>
       <button class="btn-icon" data-act="theme" aria-label="Toggle dark mode" id="theme-btn"></button>
@@ -1275,24 +1275,27 @@ const CITIES = ['Islamabad', 'Rawalpindi', 'Wah Cantt', 'Taxila', 'Murree', 'Att
 const ROLES = {
   super:     { label: 'Super Admin (IT)', code: 'IT',   perms: ['users', 'settings', 'audit', 'backup', 'reports', 'export', 'revealPII', 'signatories'] },
   /* Manager RMD: every RMD right, plus the team console, donor import, anonymisation, reports and audit */
-  rmdmgr:    { label: 'Manager RMD',      code: 'MRMD', perms: ['donor.create', 'donor.edit', 'donor.anonymize', 'donor.import', 'donor.assign', 'donation.create', 'pledge.manage', 'messages', 'reminders', 'signatories', 'revealPII', 'export', 'reports', 'audit', 'team', 'corrections.view'] },
+  rmdmgr:    { label: 'Manager RMD',      code: 'MRMD', perms: ['donor.create', 'donor.edit', 'donor.anonymize', 'donor.import', 'donor.assign', 'donation.create', 'pledge.manage', 'messages', 'reminders', 'signatories', 'revealPII', 'export', 'reports', 'audit', 'team', 'corrections.view', 'case.create', 'case.work'] },
   /* RMO (Resource Mobilization Officer): field work on donors, receipts, pledges and messages; sees a personal workspace */
-  rmd:       { label: 'RMO (Resource Mobilization Officer)', code: 'R15', perms: ['donor.create', 'donor.edit', 'donation.create', 'pledge.manage', 'messages', 'reminders', 'revealPII', 'corrections.view', 'mine'] },
-  finance:   { label: 'Finance Officer',  code: 'R14',  perms: ['donor.create', 'donation.create', 'donation.verify', 'donation.void', 'messages', 'revealPII', 'export', 'reports', 'corrections.view'] },
+  rmd:       { label: 'RMO (Resource Mobilization Officer)', code: 'R15', perms: ['donor.create', 'donation.create', 'pledge.manage', 'messages', 'reminders', 'revealPII', 'corrections.view', 'mine', 'case.work'] },
+  finance:   { label: 'Finance Officer',  code: 'R14',  perms: ['donor.create', 'donation.create', 'donation.verify', 'donation.void', 'messages', 'revealPII', 'export', 'reports', 'corrections.view', 'case.approve'] },
   /* Store Officer: sees only in-kind work. 'views' is a strict allow-list of tabs for the role */
   store:     { label: 'Store Officer',    code: 'STR',  perms: ['inkind.verify', 'corrections.view'], views: ['dashboard', 'goods', 'corrections'] },
-  rm:        { label: 'Regional Manager', code: 'R16',  perms: ['reports', 'audit', 'corrections.view', 'export'] },
-  president: { label: 'President',        code: 'PRES', perms: ['reports', 'audit', 'corrections.view'] },
+  rm:        { label: 'Regional Manager', code: 'R16',  perms: ['reports', 'audit', 'corrections.view', 'export', 'case.approve'] },
+  president: { label: 'President',        code: 'PRES', perms: ['reports', 'audit', 'corrections.view', 'case.approve'] },
   gs:        { label: 'GS / Board',       code: 'R18',  perms: ['reports', 'audit', 'corrections.view'] }
 };
 
 const NAV = [
   { v: 'dashboard', label: 'Dashboard', icon: 'grid' },
-  { v: 'new', label: 'New Receipt', icon: 'plus', perm: 'donation.create', primary: true },
+  { v: 'new', label: 'New receipt', icon: 'plus', perm: 'donation.create', primary: true },
+  { v: 'collect', label: 'Quick Collect (walk-in)', icon: 'zap', perm: 'donation.create' },
   { v: 'donations', label: 'Donations', icon: 'receipt', badge: 'pending' },
+  { v: 'finance', label: 'Finance Verification', icon: 'shieldCheck', badge: 'fin', perm: 'donation.verify' },
   { v: 'goods', label: 'In-kind to receive', icon: 'box', badge: 'goods', perm: 'inkind.verify' },
   { v: 'donors', label: 'Donors', icon: 'users' },
   { v: 'pledges', label: 'Pledges & Installments', icon: 'calendar', badge: 'due' },
+  { v: 'cases', label: 'Cases (One ID, One Story)', icon: 'audit', badge: 'cases' },
   { v: 'team', label: 'RMD Team', icon: 'users', perm: 'team' },
   { v: 'import', label: 'Import / Export (Excel)', icon: 'upload', perm: 'donor.import' },
   { v: 'corrections', label: 'Corrections', icon: 'fix', badge: 'corr', perm: 'corrections.view' },
@@ -1305,7 +1308,7 @@ const NAV = [
   { v: 'users', label: 'Users & Roles', icon: 'userCog', perm: 'users' },
   { v: 'settings', label: 'Settings & Backup', icon: 'gear', perm: 'settings' }
 ];
-const TITLES = { goods: 'In-kind to Receive', team: 'RMD Team', import: 'Import & Export', corrections: 'Corrections', dashboard: 'Dashboard', new: 'New Receipt', donors: 'Donors', donations: 'Donations & Receipts', pledges: 'Pledges & Installments', messages: 'Donor Messages', signatories: 'Signatories', collect: 'Quick Collect', reports: 'Reports & Analytics', verify: 'Verify a Receipt', audit: 'Audit Trail', users: 'Users & Roles', settings: 'Settings & Backup', account: 'My Account' };
+const TITLES = { finance: 'Finance Verification', cases: 'Cases', goods: 'In-kind to Receive', team: 'RMD Team', import: 'Import & Export', corrections: 'Corrections', dashboard: 'Dashboard', new: 'New receipt', donors: 'Donors', donations: 'Donations & Receipts', pledges: 'Pledges & Installments', messages: 'Donor Messages', signatories: 'Signatories', collect: 'Quick Collect', reports: 'Reports & Analytics', verify: 'Verify a Receipt', audit: 'Audit Trail', users: 'Users & Roles', settings: 'Settings & Backup', account: 'My Account' };
 
 /* ---------------- Icons ---------------- */
 const IC = {
@@ -1509,10 +1512,11 @@ const ERP_PERMS = {
   'messages': [['messages', 'edit']], 'reminders': [['pledges', 'edit']], 'signatories': [['signatories', 'edit']],
   'revealPII': [['donors', 'export']], 'export': [['reports', 'export'], ['donations', 'export'], ['import', 'export'], ['team', 'export']],
   'reports': [['reports', 'view']], 'audit': [['audit', 'view']], 'team': [['team', 'view']], 'corrections.view': [['corrections', 'view']],
+  'case.create': [['cases', 'add']], 'case.work': [['cases', 'edit']], 'case.approve': [['cases', 'approve']],
   'corrections.request': [['corrections', 'add']], 'corrections.approve': [['corrections', 'approve']], 'settings': [['settings', 'edit']]
 };
 /* the view → the tab ticked on the main page (views not listed are never shown in ERP mode) */
-const ERP_VIEW_TAB = { dashboard: 'dashboard', new: 'new', donations: 'donations', donors: 'donors', pledges: 'pledges', team: 'team', import: 'import',
+const ERP_VIEW_TAB = { dashboard: 'dashboard', new: 'new', collect: 'new', donations: 'donations', finance: 'donations', donors: 'donors', pledges: 'pledges', cases: 'cases', team: 'team', import: 'import',
   corrections: 'corrections', messages: 'messages', reports: 'reports', verify: 'verify', signatories: 'signatories', audit: 'audit' };
 /* no settings page inside the portal: everything is set on the main page (Settings → Donor Management, Super Admin) */
 
@@ -1535,6 +1539,7 @@ function freshUI() {
     reports: { from: todayISO().slice(0, 4) + '-01-01', to: todayISO(), cat: '', program: '' },
     audit: { q: '', action: '', page: 1 },
     pledges: { q: '', status: 'Active', due: '' },
+    cases: { q: '', f: 'mine', page: 1 },
     messages: { status: 'Queued', type: '', page: 1 },
     newPrefill: null, newDone: null,
     reveal: {}
@@ -1607,18 +1612,19 @@ function newStore(orgName) {
   return {
     v: 1, createdAt: new Date().toISOString(),
     org: Object.assign({ name: orgName || 'Alkhidmat Foundation Islamabad', footer: 'JazakAllah Khair for your generous contribution. Zakat funds are kept in a restricted account and spent only on eligible beneficiaries.' }, RECEIPT_DEFAULTS),
-    settings: { idleMin: 10, autoShare: true, autoDownload: true, autoServer: false, serverUrl: '', reminderDays: 3, templates: Object.assign({}, DEFAULT_TEMPLATES) },
-    pledges: [], messages: [], signatories: [], signatures: {}, corrections: [], stock: [],
+    settings: { idleMin: 30, autoShare: true, autoDownload: true, autoServer: false, serverUrl: '', reminderDays: 3, templates: Object.assign({}, DEFAULT_TEMPLATES) },
+    pledges: [], messages: [], signatories: [], signatures: {}, corrections: [], stock: [], cases: [],
     seq: { donor: 0, donation: 0 },
     receiptKey: b64(rand(32)),
     users: {}, donors: [], donations: [], audit: []
   };
 }
 function migrate(st) {
-  st.settings = Object.assign({ idleMin: 10, autoShare: true, autoDownload: true, autoServer: false, serverUrl: '', reminderDays: 3 }, st.settings || {});
+  st.settings = Object.assign({ idleMin: 30, autoShare: true, autoDownload: true, autoServer: false, serverUrl: '', reminderDays: 3 }, st.settings || {});
+  if (!st.settings.idle30) { st.settings.idleMin = Math.max(st.settings.idleMin || 0, 30); st.settings.idle30 = true; }   // one time: the idle sign-out moves from 10 to 30 minutes (asked 2026-11-11)
   st.settings.templates = Object.assign({}, DEFAULT_TEMPLATES, st.settings.templates || {});
   if (st.settings.templates.ack === ACK_V7) st.settings.templates.ack = DEFAULT_TEMPLATES.ack;
-  ['pledges', 'messages', 'signatories', 'corrections', 'stock'].forEach(k => { if (!Array.isArray(st[k])) st[k] = []; });
+  ['pledges', 'messages', 'signatories', 'corrections', 'stock', 'cases'].forEach(k => { if (!Array.isArray(st[k])) st[k] = []; });
   st.signatures = st.signatures || {};
   // every user who already saved a signature becomes a signatory
   Object.entries(st.users).forEach(([uid, u]) => { if (u.sigId && !st.signatories.some(s => s.userId === uid)) st.signatories.push({ id: 'SG-' + uid, userId: uid, name: u.name, designation: u.designation || (ROLES[u.role] ? ROLES[u.role].label : ''), sigId: u.sigId, active: true }); });
@@ -1681,10 +1687,46 @@ function donorStatsMap() {
   return m;
 }
 const showPII = () => can('revealPII');
+/* a downloaded donor list holds names only. The full file (CNIC, mobile, e-mail, address) is released once, after four approvals:
+   the database checks every step (donor_file_* in donor.sql); FULL_ONCE is true only while that one approved file is being built */
+let FULL_ONCE = false, FILE_REQS = [];
+const fullPII = () => ERP ? FULL_ONCE : showPII() && !!ME && ME.role === 'super';
+const FILE_PATH = ['Manager RMD', 'Regional Manager', 'General Secretary', 'President'];
+const fileStatus = r => r.status === 'Waiting' ? 'Waiting for ' + (FILE_PATH[r.step - 1] || '') : r.status === 'Approved' && !r.fresh ? 'Approved, 24 hours passed' : r.status;
+console.assert(fileStatus({ status: 'Waiting', step: 3 }) === 'Waiting for General Secretary' && fileStatus({ status: 'Approved', fresh: true }) === 'Approved' && fileStatus({ status: 'Approved' }) !== 'Approved', 'fileStatus');
+async function fileReqLoad() { if (!ERP) return; const { data, error } = await erpSb.rpc('donor_file_list'); if (!error && Array.isArray(data)) FILE_REQS = data; }
+async function fileReqOpen() {
+  await fileReqLoad();
+  const btn = (act, r, label, cls) => `<button class="btn btn-sm ${cls}" data-act="${act}" data-id="${esc(r.id)}">${label}</button>`;
+  const rows = FILE_REQS.map(r => `<tr><td><b>${esc(r.name)}</b><div class="muted small">${fmtDT(r.at)}</div></td>
+    <td>${esc(r.reason)}${(r.trail || []).map(t => `<div class="muted small">${t.step ? esc(t.step) + ': ' : ''}${esc(t.what)} by ${esc(t.by)}, ${fmtDT(t.at)}${t.remarks ? ' · ' + esc(t.remarks) : ''}</div>`).join('')}</td>
+    <td><span class="badge ${r.status === 'Waiting' ? 'b-warn' : r.status === 'Rejected' || r.status === 'Cancelled' ? 'b-bad' : 'b-ok'}">${esc(fileStatus(r))}</span></td>
+    <td>${r.forMe ? btn('file-ok', r, 'Approve', 'btn-primary') + ' ' + btn('file-no', r, 'Reject', 'btn-danger') : ''}${r.mine && r.status === 'Waiting' ? btn('file-cancel', r, 'Cancel request', 'btn-ghost') : ''}${r.mine && r.fresh ? btn('file-take', r, 'Download full file', 'btn-primary') : ''}</td></tr>`).join('');
+  openModal({ title: 'Full donor file', size: 'lg',
+    body: `<p style="color:var(--text-2)">The normal download holds <b>names only</b>. The full file (CNIC, mobile, e-mail, address) needs a request with a reason. <b>Approval path:</b> ${FILE_PATH.join(' → ')}. After the last approval the file can be downloaded <b>once</b>, within 24 hours. Every step is kept in the Super Admin audit trail.</p>
+      ${rows ? `<div class="tbl-wrap" style="margin-top:14px"><table class="tbl"><thead><tr><th>Request by</th><th>Reason and steps</th><th>Status</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="muted" style="margin-top:14px">No request yet.</p>'}`,
+    foot: `<button class="btn btn-secondary" data-act="modal-close">Close</button>${can('export') ? '<button class="btn btn-primary" data-act="file-ask">New request</button>' : ''}` });
+}
+async function fileReqDo(fn, args, what, done) {
+  const { error } = await erpSb.rpc(fn, args);
+  if (error) { toast(erpErr(error, what), 'error', 9000); return false; }
+  toast(done, 'success'); return true;
+}
+async function fileReqDecide(id, ok, title, message, okLabel) {
+  const r = await ask({ title, message, ok: okLabel, danger: !ok, reason: true });
+  if (r.ok && await fileReqDo('donor_file_decide', { p_id: id, p_ok: ok, p_remarks: r.reason }, 'Not saved', 'Saved.')) fileReqOpen();
+}
+async function fileReqTake(id) {
+  if (!await fileReqDo('donor_file_take', { p_id: id }, 'The full file was not released', 'Released. Building the file…')) return;
+  FULL_ONCE = true; try { await exportDonorsXlsx(null); } finally { FULL_ONCE = false; }
+  fileReqOpen();
+}
 const donorName = d => d ? d.name : 'Unknown donor';
 /* numbers: offline they count up in this browser; in ERP mode they are reserved on the server first (erpNeed),
    so two officers can never issue the same receipt number */
 const seqNext = k => { if (!ERP) { S.seq[k] = (S.seq[k] || 0) + 1; return S.seq[k]; } const n = ERP_POOL[k].shift(); if (n == null) throw new Error('No ' + k + ' number reserved. Please try again.'); return n; };
+const sameDonor = (a, b) => !a.anonymized && !!normPhone(a.phone) && normPhone(a.phone) === normPhone(b.phone) && a.name.trim().toLowerCase() === b.name.trim().toLowerCase();
+console.assert(sameDonor({ name: 'Ali Khan', phone: '0300-1234567' }, { name: ' ali khan', phone: '03001234567' }) && !sameDonor({ name: 'Ali Khan', phone: '0300-1234567' }, { name: 'Sara Khan', phone: '0300-1234567' }) && !sameDonor({ name: 'A', phone: '' }, { name: 'A', phone: '' }), 'sameDonor: same name and same mobile only');
 function nextDonorId() { const n = seqNext('donor'), t = todayISO(); return `AFI-DON-${t.slice(0, 4)}${t.slice(5, 7)}-${pad(n, 5)}`; }
 function nextDonationIds(date) { const n = seqNext('donation'), y = (date || todayISO()).slice(0, 4); return { id: `DON-${y}-${pad(n, 6)}`, receipt: `RCT-${y}-${pad(n, 6)}`, serial: n }; }
 async function receiptCode(x) {
@@ -1736,7 +1778,7 @@ function closeModal() {
 const modalOpen = () => $('#modal-layer').classList.contains('open');
 
 let dialogResolve = null;
-function ask({ title, message, ok = 'Confirm', danger = false, typed = '', reason = false, reasonLabel = 'Reason', input = null }) {
+function ask({ title, message, ok = 'Confirm', danger = false, typed = '', reason = false, reasonLabel = 'Remarks', input = null }) {
   return new Promise(resolve => {
     const prevFocus = document.activeElement;
     $('#dialog-title').textContent = title;
@@ -2053,7 +2095,7 @@ function startTicker() {
   clearInterval(tick); lastActivity = Date.now();
   tick = setInterval(() => {
     if (!ME) return;
-    const idleMs = (S.settings.idleMin || 10) * 60000;
+    const idleMs = (S.settings.idleMin || 30) * 60000;
     const left = Math.max(0, idleMs - (Date.now() - lastActivity));
     const s = Math.ceil(left / 1000);
     $('#session-left').textContent = `${Math.floor(s / 60)}:${pad(s % 60, 2)}`;
@@ -2108,7 +2150,7 @@ function enterApp() {
   go(v && allowed(v) ? v : 'dashboard', true);
 }
 const roleViews = () => (ME && ROLES[ME.role] && ROLES[ME.role].views) || null;
-const viewOK = v => v === 'account' || (ERP ? !!ERP_VIEW_TAB[v] && (ME && ME.isSuper || gridHas(ERP_VIEW_TAB[v])) : (!roleViews() || roleViews().includes(v)));
+const viewOK = v => v === 'account' || (ERP ? !!ERP_VIEW_TAB[v] && (ME && ME.isSuper || gridHas(ERP_VIEW_TAB[v])) : (!roleViews() || roleViews().includes(v === 'collect' ? 'new' : v)));   // Quick Collect follows the New Receipt access
 const allowed = v => viewOK(v) && (v === 'account' || NAV.some(n => n.v === v && (!n.perm || can(n.perm))));
 const EMBEDDED = (() => { try { return window.parent !== window; } catch { return true; } })();
 /* Full address of this page with a new #hash. Inside the combined portal this page is about:srcdoc,
@@ -2127,7 +2169,9 @@ function buildChrome() {
     due: can('reminders') ? dueInstallments().length : 0,
     outbox: can('messages') ? S.messages.filter(m => m.status === 'Queued').length : 0,
     corr: S.corrections.filter(c => c.status === 'Pending' && canDecideC(c)).length,
-    goods: can('inkind.verify') ? S.donations.filter(d => d.status === 'Pending' && needsGoodsCheck(d) && canVerifyX(d)).length : 0
+    fin: can('donation.verify') ? finQueue().filter(canVerifyX).length : 0,
+    goods: can('inkind.verify') ? S.donations.filter(d => d.status === 'Pending' && needsGoodsCheck(d) && canVerifyX(d)).length : 0,
+    cases: (caseBoot(), viewOK('cases') ? (S.cases || []).filter(c => caseMine(c) || caseEscalated(c)).length : 0)
   };
   let html = '', prevSec = null;
   for (const n of NAV) {
@@ -2162,7 +2206,7 @@ function go(view, replace) {
   UI.view = view;
   const h = '#/' + view;
   if (location.hash !== h) { if (replace) history.replaceState(null, '', docURL(h)); else history.pushState(null, '', docURL(h)); }
-  forceRender = true; render();
+  forceRender = true; lastRenderedView = ''; render();   // a menu click plays the entry animation
   closeMenu();
   $('#view').focus({ preventScroll: true });
   window.scrollTo({ top: 0 });
@@ -2178,7 +2222,7 @@ function render() {
   dataVer++;
   // never wipe a half-filled New Receipt form because some other action re-rendered the page
   const keep = UI.view === 'new' && !UI.newDone && !forceRender && $('#f-new');
-  const navigated = forceRender || UI.view !== lastRenderedView;
+  const navigated = UI.view !== lastRenderedView;
   forceRender = false;
   if (keep) { buildChrome(); return; }
   $('#page-title').textContent = TITLES[UI.view] || '';
@@ -2324,7 +2368,7 @@ VIEWS.dashboard = {
     return `
     <section class="hero"><span class="blob b1"></span><span class="blob b2"></span><span class="pattern"></span>
       <div class="hero-in"><div>
-        <h2>${esc(hello)}, ${esc(ME.name.split(' ')[0])}</h2>
+        <h2>${esc(hello)}, ${esc(ME.name)}</h2>
         <p>${esc(new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Karachi' }))} · ${esc(ROLES[ME.role].label)}</p>
         <div class="hero-stats">
           <div class="hs"><b data-count>${esc(compact(sumAmt(todayList)))}</b><span>Recorded today · ${todayList.length}</span></div>
@@ -2334,7 +2378,7 @@ VIEWS.dashboard = {
         </div></div>
         <div class="hero-acts">${can('donation.create') ? `<button class="btn btn-white btn-lg" data-act="new-again">${ic('plus')}New receipt</button>` : ''}<button class="btn btn-glass" data-act="nav" data-view="donations">${ic('receipt')}Donations</button>${can('reports') ? `<button class="btn btn-glass" data-act="nav" data-view="reports">${ic('chart')}Reports</button>` : ''}</div>
       </div></section>
-    ${notes.length ? `<div class="card attention"><div class="card-h"><h3>${ic('bell')}Needs your attention <span class="count-pill">${notes.length}</span></h3></div><div class="tasks">${notifHTML(notes.slice(0, 5))}</div>${notes.length > 5 ? `<button class="btn btn-ghost btn-sm" data-act="bell" style="margin-top:8px">Show all ${notes.length}</button>` : ''}</div>` : ''}
+    ${notes.length ? `<div class="card attention"><div class="card-h"><h3>${ic('bell')}Needs your attention <span class="count-pill">${notes.length}</span></h3></div><div class="tasks">${notifHTML(notes)}</div></div>` : ''}
     <div class="kpis">
       ${kpi('ytd', 'accent', 'wallet', `Verified collections ${yr}`, esc(compact(ytd)), esc(money(ytd)), 'Show verified donations this year', trendVals)}
       ${kpi('mtd', '', 'calendar', 'This month', esc(compact(mtd)), delta === null ? 'No data for last month' : `${delta >= 0 ? '▲' : '▼'} ${Math.abs(delta)}% vs last month`, 'Show this month’s donations', trendVals.slice(-6))}
@@ -2394,7 +2438,7 @@ VIEWS.donors = {
     const opt = (v, cur, label) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(label || v)}</option>`;
     return `
     <div class="page-head"><div><h2>Donor registry</h2><p>${NUM.format(S.donors.length)} donors on record${showPII() ? '' : ' · personal identifiers are masked for your role'}</p></div>
-      <div class="actions">${can('donor.import') ? `<button class="btn btn-secondary" data-act="nav" data-view="import">${ic('upload')}Import Excel</button>` : ''}${can('export') ? `<button class="btn btn-secondary" data-act="exp-donors">${ic('download')}Export Excel</button><button class="btn btn-ghost" data-act="export-donors">CSV</button>` : ''}${can('donor.create') ? `<button class="btn btn-primary" data-act="donor-add">${ic('plus')}Add donor</button>` : ''}</div></div>
+      <div class="actions">${can('donor.import') ? `<button class="btn btn-secondary" data-act="nav" data-view="import">${ic('upload')}Import Excel</button>` : ''}${can('export') ? `<button class="btn btn-secondary" data-act="exp-donors">${ic('download')}Export Excel</button><button class="btn btn-ghost" data-act="export-donors">CSV</button>` : ''}${ERP ? `<button class="btn btn-secondary" data-act="file-reqs">${ic('shieldCheck')}Full donor file${FILE_REQS.some(r => r.forMe) ? ' · waiting for you' : ''}</button>` : ''}${can('donor.create') ? `<button class="btn btn-primary" data-act="donor-add">${ic('plus')}Add donor</button>` : ''}</div></div>
     <div class="card">
       <div class="toolbar">
         <div class="grow search-in">${ic('search')}<input class="input" id="d-q" type="search" placeholder="Search name, ID, CNIC, phone, city…" value="${esc(st.q)}" aria-label="Search donors" maxlength="80"></div>
@@ -2429,9 +2473,11 @@ async function revealCnic(id) {
   if (!guard('revealPII')) return;
   const d = donorById(id); if (!d) return;
   if (UI.reveal[id]) { delete UI.reveal[id]; updateCnicCells(id); return; }
+  await audit('PII_REVEALED', d.id, 'CNIC displayed on screen');
+  if (ERP) { const e = erpAuditNew.pop(), { error } = await erpSb.from('donor_rows').insert({ collection: 'audit', id: e.id, data: e });
+    if (error) { S.audit.pop(); toast(erpErr(error, 'The CNIC is not shown'), 'error', 9000); return; } } else persist();
   UI.reveal[id] = Date.now();
   updateCnicCells(id);
-  await audit('PII_REVEALED', d.id, 'CNIC displayed on screen'); persist();
   setTimeout(() => { if (UI.reveal[id] && Date.now() - UI.reveal[id] >= REVEAL_SEC * 1000 - 50) { delete UI.reveal[id]; updateCnicCells(id); } }, REVEAL_SEC * 1000);
 }
 function updateCnicCells(id) {
@@ -2504,7 +2550,7 @@ function donorForm(existing, prefill = {}) {
       </div>
       <div class="grid-2">
         <div class="field"><label for="fd-father"><span data-father-lbl>${isOrg ? 'Contact person' : 'Father / husband name'}</span></label><input class="input" id="fd-father" name="father" maxlength="100" value="${esc(d.father)}"><div class="err" data-err="father"></div></div>
-        <div class="field ${isOrg ? 'hidden' : ''}" data-ind><label for="fd-cnic">CNIC <span class="req">*</span></label><input class="input mono" id="fd-cnic" name="cnic" inputmode="numeric" placeholder="35202-1234567-8" maxlength="15" value="${esc(d.cnic)}"><div class="hint">13 digits — dashes are added automatically</div><div class="err" data-err="cnic"></div></div>
+        <div class="field ${isOrg ? 'hidden' : ''}" data-ind><label for="fd-cnic">CNIC</label><input class="input mono" id="fd-cnic" name="cnic" inputmode="numeric" placeholder="35202-1234567-8" maxlength="15" value="${esc(d.cnic)}"><div class="hint">Optional. 13 digits — dashes are added automatically</div><div class="err" data-err="cnic"></div></div>
         <div class="field ${isOrg ? '' : 'hidden'}" data-org><label for="fd-ntn">NTN / registration no.</label><input class="input mono" id="fd-ntn" name="ntn" maxlength="20" value="${esc(d.ntn)}"><div class="err" data-err="ntn"></div></div>
         <div class="field"><label for="fd-phone">Mobile / phone <span class="req">*</span></label><input class="input" id="fd-phone" name="phone" inputmode="tel" placeholder="0300-1234567" maxlength="16" value="${esc(d.phone)}"><div class="err" data-err="phone"></div></div>
         <div class="field"><label for="fd-email">Email</label><input class="input" id="fd-email" name="email" type="email" maxlength="120" value="${esc(d.email)}"><div class="err" data-err="email"></div></div>
@@ -2539,7 +2585,7 @@ function donorForm(existing, prefill = {}) {
     let bad = false;
     if (!validName(p.name)) { setErr(f, 'name', 'Enter a valid name (2–100 letters).'); bad = true; }
     if (p.father && !validName(p.father)) { setErr(f, 'father', 'Use letters only.'); bad = true; }
-    if (p.type === 'Individual' && !validCNIC(p.cnic)) { setErr(f, 'cnic', 'Enter a valid 13-digit CNIC (e.g. 35202-1234567-8).'); bad = true; }
+    if (p.cnic && !validCNIC(p.cnic)) { setErr(f, 'cnic', 'This CNIC is not complete. Enter all 13 digits (e.g. 35202-1234567-8) or leave it empty.'); bad = true; }
     if (p.ntn && !/^[A-Za-z0-9\-\/]{4,20}$/.test(p.ntn)) { setErr(f, 'ntn', 'Letters, digits and dashes only.'); bad = true; }
     if (!validPhone(p.phone)) { setErr(f, 'phone', 'Enter a valid Pakistani number (e.g. 0300-1234567).'); bad = true; }
     if (p.email && !validEmail(p.email)) { setErr(f, 'email', 'Enter a valid email address.'); bad = true; }
@@ -2549,6 +2595,7 @@ function donorForm(existing, prefill = {}) {
     const others = S.donors.filter(x => !existing || x.id !== existing.id);
     if (p.cnic) { const dup = others.find(x => x.cnic === p.cnic); if (dup) { setErr(f, 'cnic', `This CNIC is already registered to ${dup.name} (${dup.id}).`); focusFirstErr(f); return; } }
     if (p.ntn) { const dup = others.find(x => x.ntn && x.ntn.toLowerCase() === p.ntn.toLowerCase()); if (dup) { setErr(f, 'ntn', `Already registered to ${dup.name} (${dup.id}).`); focusFirstErr(f); return; } }
+    const same = others.find(x => sameDonor(x, p)); if (same) { setErr(f, 'name', `This donor is already registered as ${same.id}. Open that record instead.`); focusFirstErr(f); return; }
     const sim = others.find(x => normPhone(x.phone) === normPhone(p.phone) || x.name.toLowerCase() === p.name.toLowerCase() && x.city === p.city);
     if (sim) { const r = await ask({ title: 'Possible duplicate', message: `A similar donor already exists: <b>${esc(sim.name)}</b> (${esc(sim.id)}, ${esc(sim.city)}). Continue saving anyway?`, ok: 'Save anyway' }); if (!r.ok) return; }
     if (existing) {
@@ -2640,7 +2687,7 @@ VIEWS.donations = {
       <div class="cards-m">${items.map(x => `<div class="m-card" data-act="receipt" data-id="${esc(x.id)}" tabindex="0" role="button">
         <div class="m-top"><div><div class="m-name">${esc(donorName(donorById(x.donorId)))}</div><div class="m-meta mono">${esc(x.receipt)} · ${fmtDate(x.date)}</div></div>${statusBadge(x.status)}</div>
         <div class="m-row">${catBadge(x.category)}<b class="num">${esc(money(x.amount))}</b></div>
-        ${x.status === 'Pending' && canVerifyX(x) ? `<div class="m-row"><button class="btn btn-success btn-sm" data-act="don-verify" data-id="${esc(x.id)}">${ic('check')}Verify</button><button class="btn btn-secondary btn-sm" data-act="don-reject" data-id="${esc(x.id)}">Reject</button></div>` : ''}</div>`).join('')}</div>
+        ${x.status === 'Pending' && canVerifyX(x) ? `<div class="m-row"><button class="btn btn-success btn-sm" data-act="don-verify" data-id="${esc(x.id)}">${ic('check')}Verify</button><button class="btn btn-ghost btn-sm" style="color:var(--danger)" data-act="don-reject" data-id="${esc(x.id)}">Reject</button></div>` : ''}</div>`).join('')}</div>
       ${pager('donations', page, list.length)}` : emptyState('receipt', 'No donations found', 'Adjust the filters or record a new donation.', can('donation.create') ? `<button class="btn btn-primary" data-act="don-add">${ic('plus')}Record donation</button>` : '')}
     </div>`;
   },
@@ -2684,7 +2731,9 @@ const donorSnapOf = d => d ? { type: d.type, title: d.title || (d.type === 'Orga
    SIGNATORIES (name, designation, drawn or imported signature)
    ===================================================================== */
 const activeSignatories = () => S.signatories.filter(s => s.active !== false && S.signatures[s.sigId]);
-const defaultSignatory = () => { const a = activeSignatories(); return a.find(s => s.userId === ME.id) || a[0] || null; };
+/* a receipt carries only the signature of the person signed in: never another person's as a stand-in */
+const mySigs = () => activeSignatories().filter(s => s.userId === ME.id);
+const defaultSignatory = () => mySigs()[0] || null;
 async function upsertMySignatory(sigId, designation) {
   let s = S.signatories.find(x => x.userId === ME.id);
   if (!s) { s = { id: 'SG-' + hex(rand(5)), userId: ME.id, name: ME.name, designation: designation || S.users[ME.id].designation || ROLES[ME.role].label, active: true }; S.signatories.push(s); }
@@ -2694,7 +2743,7 @@ async function upsertMySignatory(sigId, designation) {
 /* Import a scanned / photographed signature: removes the paper background, crops to the ink, normalises size. */
 async function processSignatureImage(file) {
   if (!/^image\/(png|jpe?g|webp)$/i.test(file.type)) throw new Error('Please choose a PNG or JPG image of the signature.');
-  if (file.size > 4 * 1024 * 1024) throw new Error('The image is larger than 4 MB. Please use a smaller photo or scan.');
+  if (file.size > 20 * 1024 * 1024) throw new Error('The image is larger than 20 MB. Please use a smaller photo or scan.');   // phone photos are 3-12 MB; the picture is made small below
   const url = URL.createObjectURL(file);
   try {
     const img = await imgReady(Object.assign(new Image(), { src: url }));
@@ -2718,10 +2767,10 @@ async function processSignatureImage(file) {
     return out;
   } finally { URL.revokeObjectURL(url); }
 }
-function signatoryForm(existing) {
+function signatoryForm(existing, mine) {
   const self = !existing || existing.userId === ME.id;
   if (!can('signatories') && !(self && can('donation.create'))) { guard('signatories'); return Promise.resolve(null); }
-  const s = existing || { name: ME.name, designation: S.users[ME.id].designation || ROLES[ME.role].label, userId: can('signatories') ? '' : ME.id };
+  const s = existing || { name: ME.name, designation: S.users[ME.id].designation || ROLES[ME.role].label, userId: can('signatories') && !mine ? '' : ME.id };
   return new Promise(resolve => {
     openModal({
       title: existing ? 'Edit signatory' : 'Add signatory', size: 'lg',
@@ -2729,11 +2778,11 @@ function signatoryForm(existing) {
         <div class="grid-3">
           <div class="field"><label for="sg-name">Full name <span class="req">*</span></label><input class="input" id="sg-name" name="name" maxlength="60" value="${esc(s.name)}"><div class="err" data-err="name"></div></div>
           <div class="field"><label for="sg-des">Designation <span class="req">*</span></label><input class="input" id="sg-des" name="designation" maxlength="60" list="des-list" value="${esc(s.designation)}"><datalist id="des-list">${['RMD Officer', 'Finance Officer', 'Regional Manager', 'President', 'General Secretary', 'Collection Officer', 'Accountant', 'Office In-charge'].map(v => `<option value="${v}">`).join('')}</datalist><div class="err" data-err="designation"></div></div>
-          <div class="field"><label for="sg-user">Portal user (optional)</label><select class="select" id="sg-user" name="userId" ${can('signatories') ? '' : 'disabled'}><option value="">Not linked</option>${Object.entries(S.users).filter(([, u]) => !u.disabled).map(([id, u]) => `<option value="${esc(id)}" ${id === s.userId ? 'selected' : ''}>${esc(u.name)} · ${esc(u.email)}</option>`).join('')}</select><div class="hint">Linked users get this signature by default.</div></div>
+          <div class="field"><label for="sg-user">Portal user (optional)</label><select class="select" id="sg-user" name="userId" ${can('signatories') ? '' : 'disabled'}><option value="">Not linked</option>${Object.entries(S.users).filter(([id, u]) => !u.disabled && (u.role !== 'super' || id === ME.id)).map(([id, u]) => `<option value="${esc(id)}" ${id === s.userId ? 'selected' : ''}>${esc(u.name)} · ${esc(u.email)}</option>`).join('')}</select><div class="hint">Linked users get this signature by default.</div></div>
         </div>
         <div class="sig-tabs" role="tablist"><button type="button" class="on" data-tab="draw" role="tab">Draw signature</button><button type="button" data-tab="upload" role="tab">${ic('image')}Import image</button></div>
         <div data-pane="draw"><div class="sigbox" id="sg-box"><canvas id="sg-pad" width="900" height="260" aria-label="Signature pad"></canvas><span class="sig-ph" id="sg-ph">Sign here: mouse, pen or finger</span></div><button type="button" class="btn btn-ghost btn-sm" id="sg-clear">Clear</button></div>
-        <div data-pane="upload" class="hidden"><label class="drop" for="sg-file">${ic('upload')}<b>Choose a photo or scan of the signature</b><span>PNG or JPG, on white paper. The background is removed automatically.</span></label><input type="file" id="sg-file" accept="image/png,image/jpeg,image/webp" class="sr-only"><div class="err" id="sg-file-err"></div></div>
+        <div data-pane="upload" class="hidden"><label class="drop" for="sg-cam">${ic('upload')}<b>Take a photo (camera)</b><span>Sign on white paper with a dark pen, then photograph it. The background is removed automatically.</span></label><input type="file" id="sg-cam" accept="image/*" capture="environment" class="sr-only"><label class="drop" for="sg-file" style="margin-top:8px">${ic('upload')}<b>Choose from gallery</b><span>A PNG or JPG picture or scan of your signature.</span></label><input type="file" id="sg-file" accept="image/png,image/jpeg,image/webp" class="sr-only"><div class="err" id="sg-file-err"></div></div>
         <div class="sig-preview ${existing && S.signatures[existing.sigId] ? '' : 'hidden'}" id="sg-prev"><span class="k">Signature that will print on receipts</span><img id="sg-img" alt="Signature preview" src="${existing && S.signatures[existing.sigId] ? esc(S.signatures[existing.sigId]) : ''}"></div>
         <div class="err" data-err="sig"></div>
       </form>`,
@@ -2743,12 +2792,14 @@ function signatoryForm(existing) {
     const pad = sigPad($('#sg-pad'), () => { $('#sg-ph').classList.add('hidden'); imported = null; $('#sg-prev').classList.add('hidden'); });
     $('#sg-clear').addEventListener('click', () => { pad.clear(); $('#sg-ph').classList.remove('hidden'); });
     $$('.sig-tabs button', f).forEach(b => b.addEventListener('click', () => { $$('.sig-tabs button', f).forEach(x => x.classList.toggle('on', x === b)); $$('[data-pane]', f).forEach(p => p.classList.toggle('hidden', p.dataset.pane !== b.dataset.tab)); }));
-    $('#sg-file').addEventListener('change', async e => {
+    const sgPick = async e => {
       const file = e.target.files[0]; e.target.value = ''; $('#sg-file-err').textContent = '';
       if (!file) return;
       try { imported = await processSignatureImage(file); $('#sg-img').src = imported.toDataURL('image/png'); $('#sg-prev').classList.remove('hidden'); f.dataset.dirty = '1'; }
       catch (err) { $('#sg-file-err').textContent = err.message; }
-    });
+    };
+    $('#sg-file').addEventListener('change', sgPick);
+    $('#sg-cam').addEventListener('change', sgPick);   // the same, from the camera
     f.addEventListener('submit', async e => {
       e.preventDefault(); clearErrs(f);
       const name = f.name.value.trim(), des = f.designation.value.trim();
@@ -2764,6 +2815,8 @@ function signatoryForm(existing) {
         sigId = 'SIG-' + (await sha256(url)).slice(0, 16); S.signatures[sigId] = url;
       }
       const userId = can('signatories') ? f.userId.value : ME.id;
+      // my own signature is the same in every portal (027_one_signature.sql); a signatory added for someone else is not
+      if (hasNew && userId === ME.id && ERP && window.AKF_DESK && AKF_DESK.saveSignature) AKF_DESK.saveSignature(S.signatures[sigId]).catch(e => console.warn('[signature]', e && e.message));
       let rec = existing;
       if (!rec) { rec = { id: 'SG-' + hex(rand(5)), active: true }; S.signatories.push(rec); }
       Object.assign(rec, { name, designation: des, sigId, userId, updatedAt: new Date().toISOString(), updatedBy: ME.email });
@@ -2964,10 +3017,20 @@ function queueMessage(type, ref) {
   return m;
 }
 async function serverDeliver(m, file) {
-  const url = S.settings.serverUrl; if (!/^https:\/\//i.test(url || '')) return 'receipt server not configured';
   if (!m.to.email) return 'no e-mail address';
   let pdfBase64;
   if (file) { const b = new Uint8Array(await file.arrayBuffer()); let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); pdfBase64 = btoa(s); }
+  /* in the ERP: the ERP's own e-mail service (Edge Function "send-email"), as "Alkhidmat Foundation Islamabad".
+     It reads the saved message and the donor's address from the database, so save first. */
+  if (ERP && erpSb) {
+    await persist();
+    try {
+      const { data, error } = await erpSb.functions.invoke('send-email', { body: { kind: 'donor', id: m.id, filename: file ? file.name : undefined, pdfBase64 } });
+      if (error) { let b = {}; try { b = await error.context.json(); } catch (x) { } return b.error || 'the e-mail service did not answer'; }
+      return data && data.success ? 'sent' : (data && data.error) || 'not sent';
+    } catch (e) { return 'the e-mail service could not be reached'; }
+  }
+  const url = S.settings.serverUrl; if (!/^https:\/\//i.test(url || '')) return 'receipt server not configured';
   const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 20000);
   try {
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'omit', referrerPolicy: 'no-referrer', signal: ctl.signal,
@@ -2984,6 +3047,8 @@ async function markSent(m, channel, note) {
   await audit('MESSAGE_SENT', m.donationId ? (S.donations.find(d => d.id === m.donationId) || {}).receipt || m.id : m.pledgeId || m.id, `${MSG_TYPES[m.type]} via ${channel}${note ? ' · ' + note : ''} to ${m.to.name}`);
   await persist();
 }
+/* WhatsApp, SMS and the e-mail app only open a draft: the portal cannot see whether it was sent, so the person confirms */
+const reallySent = async m => { const r = await ask({ title: 'Was the message sent?', message: `Press <b>Yes, it is sent</b> only after the message to <b>${esc(m.to.name)}</b> has really gone. Until then it stays <b>Pending</b>.`, ok: 'Yes, it is sent' }); if (!r.ok) toast('Kept as Pending. Nothing was marked as sent.', 'info'); return r.ok; };
 async function sendMessage(id, channel) {
   if (!can('messages') && !(channel && can('reminders'))) { guard('messages'); return; }
   const m = S.messages.find(x => x.id === id); if (!m) return;
@@ -2996,15 +3061,18 @@ async function sendMessage(id, channel) {
     if (!validPhone(m.to.phone)) { toast('No valid mobile number for this donor.', 'error'); return; }
     if (file) { download(file.name, file); toast('Receipt PDF saved. Attach it in the WhatsApp chat that just opened.', 'info', 9000); }
     window.open(`https://wa.me/${intlPhone(m.to.phone)}?text=${encodeURIComponent(m.text)}`, '_blank', 'noopener,noreferrer');
+    if (!await reallySent(m)) return;
     await markSent(m, 'WhatsApp', file ? 'PDF downloaded for attaching' : '');
   } else if (channel === 'sms') {
     if (!validPhone(m.to.phone)) { toast('No valid mobile number for this donor.', 'error'); return; }
     location.href = `sms:${normPhone(m.to.phone)}?body=${encodeURIComponent(m.text)}`;
+    if (!await reallySent(m)) return;
     await markSent(m, 'SMS');
   } else if (channel === 'email') {
     if (!m.to.email) { toast('No e-mail address for this donor.', 'error'); return; }
     if (file) { download(file.name, file); toast('Receipt PDF saved. Attach it to the e-mail that just opened.', 'info', 9000); }
     location.href = `mailto:${encodeURIComponent(m.to.email)}?${m.to.cc ? 'cc=' + encodeURIComponent(m.to.cc) + '&' : ''}subject=${encodeURIComponent(S.org.name + ': ' + MSG_TYPES[m.type])}&body=${encodeURIComponent(m.text)}`;
+    if (!await reallySent(m)) return;
     await markSent(m, 'E-mail', file ? 'PDF downloaded for attaching' : '');
   } else if (channel === 'share') {
     const data = { title: MSG_TYPES[m.type], text: m.text };
@@ -3015,7 +3083,7 @@ async function sendMessage(id, channel) {
   } else if (channel === 'server') {
     const r = await serverDeliver(m, file);
     if (r !== 'sent') { m.log.push({ at: new Date().toISOString(), by: ME.email, channel: 'Server', note: 'Failed: ' + r }); await audit('MESSAGE_FAILED', m.id, r); await persist(); toast('Automatic e-mail failed: ' + r, 'error'); return; }
-    await markSent(m, 'Receipt server (e-mail)', file ? 'PDF attached' : '');
+    await markSent(m, (ERP ? 'Alkhidmat e-mail' : 'Receipt server (e-mail)'), file ? 'PDF attached' : '');
   } else if (channel === 'manual') {
     await markSent(m, 'Marked sent manually');
   }
@@ -3025,7 +3093,7 @@ async function sendMessage(id, channel) {
 const canShareFile = f => { try { return !!(navigator.canShare && navigator.share && navigator.canShare({ files: [f] })); } catch { return false; } };
 function openSendDialog(id) {
   const m = S.messages.find(x => x.id === id); if (!m) return;
-  const c = msgContext(m), srv = S.settings.serverUrl && m.to.email;
+  const c = msgContext(m), srv = (ERP || S.settings.serverUrl) && m.to.email;
   const ch = (donorById(m.donorId) || {}).channel || '';
   openModal({
     title: { ack: 'Send acknowledgement to donor', thanks: 'Send thank-you & official receipt', reminder: 'Send installment reminder', correction: 'Send corrected receipt to donor' }[m.type], size: 'lg',
@@ -3040,7 +3108,7 @@ function openSendDialog(id) {
         <button class="send-opt" data-act="msg-send" data-id="${esc(m.id)}" data-ch="share">${ic('upload')}<b>Share${m.type !== 'reminder' ? ' with PDF' : ''}</b><span>WhatsApp, Gmail, Outlook…</span></button>
         ${m.to.phone ? `<button class="send-opt" data-act="msg-send" data-id="${esc(m.id)}" data-ch="sms">${ic('msg')}<b>SMS</b><span>${esc(m.to.phone)}</span></button>` : ''}
         ${m.to.email ? `<button class="send-opt" data-act="msg-send" data-id="${esc(m.id)}" data-ch="email">${ic('send')}<b>E-mail</b><span>${esc(m.to.email)}</span></button>` : ''}
-        ${srv ? `<button class="send-opt" data-act="msg-send" data-id="${esc(m.id)}" data-ch="server">${ic('zap')}<b>Auto e-mail</b><span>via receipt server</span></button>` : ''}
+        ${srv ? `<button class="send-opt" data-act="msg-send" data-id="${esc(m.id)}" data-ch="server">${ic('zap')}<b>${ERP ? 'Alkhidmat e-mail' : 'Auto e-mail'}</b><span>${ERP ? 'sent now' + (m.type !== 'reminder' ? ', PDF attached' : '') : 'via receipt server'}</span></button>` : ''}
       </div>
       ${m.log.length ? `<h4 class="sec-title">History</h4><ul class="mini-log">${m.log.map(l => `<li>${fmtDT(l.at)} · ${esc(l.channel)} · ${esc(l.by)}${l.note ? ' · ' + esc(l.note) : ''}</li>`).join('')}</ul>` : ''}`,
     foot: `${m.status === 'Queued' ? `<button class="btn btn-ghost left" data-act="msg-send" data-id="${esc(m.id)}" data-ch="manual">${ic('check')}Mark as sent</button>` : ''}<button class="btn btn-secondary" data-act="modal-close">${m.status === 'Queued' ? 'Send later (keep in outbox)' : 'Close'}</button>`
@@ -3079,6 +3147,7 @@ VIEWS.messages = {
 function computeNotifications() {
   if (!ME || !S) return [];
   const out = [];
+  if (viewOK('cases')) (S.cases || []).filter(c => caseMine(c) || caseEscalated(c)).slice(0, 20).forEach(c => out.push({ tone: caseLevel(c) > 1 ? 'b-bad' : 'b-warn', icon: 'audit', title: `Case ${c.id}: ${CASE_ST[c.status]}${caseLevel(c) ? ' · ' + CASE_LVL[caseLevel(c)] : ''}`, text: `${donorName(donorById(c.donorId))} · ${money(c.amount)}`, actions: [['case-view', 'Open case', { id: c.id }]] }));
   if (can('reminders')) dueInstallments().filter(r => !(r.s.snoozeUntil && r.s.snoozeUntil > todayISO()) && !(r.s.remindedAt && r.s.remindedAt.slice(0, 10) >= addDays(todayISO(), -2))).forEach(({ p, s, state }) => {
     out.push({ tone: state === 'Overdue' ? 'b-bad' : 'b-warn', icon: 'bell', title: `${state === 'Overdue' ? 'Overdue' : 'Due ' + fmtDate(s.due)}: installment ${s.n}/${p.count} · ${money(s.amount)}`, text: `${donorName(donorById(p.donorId))} · ${pledgePurpose(p)}`, actions: [['inst-remind', 'Send reminder', { id: p.id, n: s.n }], ['inst-snooze', 'Later', { id: p.id, n: s.n }]] });
   });
@@ -3118,7 +3187,7 @@ function donorTimeline(id, limit = 12) {
   S.pledges.filter(p => p.donorId === id).forEach(p => ev.push({ at: p.createdAt, icon: 'calendar', tone: 'b-info', text: `Pledge ${p.id}: ${money(p.total)} in ${p.count} installments (${p.status})`, act: ['pledge-view', p.id] }));
   S.messages.filter(m => m.donorId === id && m.status === 'Sent').forEach(m => ev.push({ at: m.sentAt, icon: 'send', tone: '', text: `${MSG_TYPES[m.type]} sent via ${m.channel}`, act: ['msg-open', m.id] }));
   const d = donorById(id);
-  if (d) { ev.push({ at: d.createdAt || d.since, icon: 'user', tone: '', text: `Donor registered${d.createdBy ? ' by ' + d.createdBy : ''}` }); S.audit.filter(a => a.target === id && a.action === 'DONOR_UPDATED').forEach(a => ev.push({ at: a.ts, icon: 'edit', tone: '', text: `Profile updated (${a.detail.replace('Fields: ', '')})` })); }
+  if (d) { ev.push({ at: d.createdAt || d.since, icon: 'user', tone: '', text: `Donor registered${d.createdBy ? ' by ' + d.createdBy : ''}` }); S.audit.filter(a => a.target === id && a.action === 'DONOR_UPDATED').forEach(a => ev.push({ at: a.ts, icon: 'edit', tone: '', text: `Profile updated${a.user ? ' by ' + a.user : ''} (${a.detail.replace('Fields: ', '')})` })); }
   return ev.filter(e => e.at).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, limit);
 }
 const timelineHTML = ev => ev.length ? `<ul class="timeline">${ev.map(e => `<li><span class="tl-ic badge ${e.tone}">${ic(e.icon)}</span><div><div>${e.act ? `<a href="#" data-act="${e.act[0]}" data-id="${esc(e.act[1])}">${esc(e.text)}</a>` : esc(e.text)}</div><span class="muted small">${fmtDT(e.at)}</span></div></li>`).join('')}</ul>` : '<p class="muted small">No history yet.</p>';
@@ -3176,7 +3245,7 @@ VIEWS.new = {
           <div id="pay-box"><div class="grid-3" style="margin-top:12px">
             <div class="field"><label for="nr-mode">Paid by <span class="req">*</span></label><select class="select" id="nr-mode" name="mode">${opt(MODES, pf.mode || 'Cash')}</select></div>
             <div class="field"><label for="nr-ref"><span id="ref-lbl">Cheque / Draft #</span> <span class="req hidden" id="ref-req">*</span></label><input class="input mono" id="nr-ref" name="ref" maxlength="40" placeholder="Number / transaction ID"><div class="err" data-err="ref"></div></div>
-            <div class="field"><label for="nr-bank">Bank <span class="req hidden" id="bank-req">*</span></label><select class="select" id="nr-bank" name="bank"><option value="">Select bank…</option>${groupedOptions(BANK_GROUPS, pf.bank || '')}</select><input class="input hidden" id="nr-bank-other" name="bankOther" maxlength="60" placeholder="Type the bank name" style="margin-top:6px" value="${esc(pf.bankOther || '')}"><div class="err" data-err="bank"></div></div></div>
+            <div class="field"><label for="nr-bank">Bank <span class="req hidden" id="bank-req">*</span></label><select class="select" id="nr-bank" name="bank"><option value="">Select bank…</option>${groupedOptions(BANK_GROUPS, pf.bank || '')}</select><input class="input hidden" id="nr-bank-other" name="bankOther" maxlength="60" data-other="donor.bank" list="akf-oth-donor.bank" placeholder="Type the bank name" style="margin-top:6px" value="${esc(pf.bankOther || '')}"><div class="err" data-err="bank"></div></div></div>
           <div class="field"><label for="nr-notes">Internal notes (not printed) <span class="req hidden" id="notes-req">*</span></label><input class="input" id="nr-notes" name="notes" maxlength="300"><div class="err" data-err="notes"></div></div></div>
         </section>
         <section class="card nr-sec"><details class="co-box" ${pf.co && pf.co.name ? 'open' : ''}><summary><span class="num sm">4</span> C/O (care of): optional, a person the gift comes through or on behalf of</summary>
@@ -3184,9 +3253,9 @@ VIEWS.new = {
             <div class="field"><label for="nr-coname">C/O name</label><input class="input" id="nr-coname" name="coName" maxlength="80" value="${esc(pf.co ? pf.co.name : '')}"><div class="err" data-err="coName"></div></div>
             <div class="field"><label for="nr-comob">C/O mobile</label><input class="input" id="nr-comob" name="coMobile" inputmode="tel" maxlength="16" placeholder="0300-1234567" value="${esc(pf.co ? pf.co.mobile : '')}"><div class="err" data-err="coMobile"></div></div>
             <div class="field"><label for="nr-coemail">C/O e-mail</label><input class="input" id="nr-coemail" name="coEmail" type="email" maxlength="100" value="${esc(pf.co ? pf.co.email : '')}"><div class="err" data-err="coEmail"></div></div></div></details></section>
-        <section class="card nr-sec"><div class="sec-h"><span class="num">5</span><div><h3>Received by</h3><p>Name, designation and signature printed on the receipt.</p></div></div>
-          <div class="sig-pick"><select class="select" id="nr-sig" name="signatory" aria-label="Signatory"><option value="">Select signatory…</option>${activeSignatories().map(s => `<option value="${esc(s.id)}" ${sig && sig.id === s.id ? 'selected' : ''}>${esc(s.name)} · ${esc(s.designation)}</option>`).join('')}</select>
-            <button type="button" class="btn btn-secondary btn-sm" id="nr-sig-add">${ic('plus')}${activeSignatories().length ? 'Add / import signature' : 'Add my signature'}</button></div>
+        <section class="card nr-sec"><div class="sec-h"><span class="num">5</span><div><h3>Received by</h3><p>Your own name, designation and signature are printed on the receipt.</p></div></div>
+          <div class="sig-pick"><select class="select" id="nr-sig" name="signatory" aria-label="Signatory"><option value="">Select signatory…</option>${mySigs().map(s => `<option value="${esc(s.id)}" ${sig && sig.id === s.id ? 'selected' : ''}>${esc(s.name)} · ${esc(s.designation)}</option>`).join('')}</select>
+            <button type="button" class="btn btn-secondary btn-sm" id="nr-sig-add">${ic('plus')}${mySigs().length ? 'Change my signature' : 'Add my signature'}</button></div>
           <div id="nr-sig-prev"></div><div class="err" data-err="signatory"></div></section>
       </div>
       <aside class="nr-side"><div class="card summary">
@@ -3233,7 +3302,7 @@ function bindNewReceipt() {
     if (donor) {
       const s = donorStatsMap()[donor.id] || { total: 0, count: 0 };
       const pledges = S.pledges.filter(p => p.donorId === donor.id && p.status === 'Active');
-      const miss = []; if (!donor.address) miss.push('address'); if (!donor.phone) miss.push('mobile'); if (donor.type !== 'Organization' && !donor.cnic) miss.push('CNIC');
+      const miss = []; if (!donor.address) miss.push('address'); if (!donor.phone) miss.push('mobile');
       dBox.innerHTML = `<div class="donor-sel"><span class="avatar lg">${esc(initials(donor.name))}</span><div class="ds-main"><b>${esc((donor.title || '') + ' ' + donor.name)}</b><span class="muted small mono">${esc(donor.id)}</span>
           <div class="donor-print"><div><span class="k">Address</span>${esc([donor.address, donor.city].filter(Boolean).join(', ') || '—')}</div><div><span class="k">Mobile</span>${esc(donor.phone || '—')}</div><div><span class="k">${donor.type === 'Organization' ? 'NTN' : 'CNIC'}</span>${esc(donor.type === 'Organization' ? (donor.ntn || '—') : maskCNIC(donor.cnic))}</div><div><span class="k">E-mail</span>${esc(donor.email || '—')}</div></div></div>
           ${pl ? '' : `<div class="ds-acts"><button type="button" class="btn btn-secondary btn-sm" id="ds-change">${ic('swap')}Change</button>${can('donor.edit') ? `<button type="button" class="btn btn-ghost btn-sm" id="ds-edit">${ic('edit')}Edit details</button>` : ''}</div>`}</div>
@@ -3257,7 +3326,7 @@ function bindNewReceipt() {
           <div class="field"><label for="nd-title">Title</label><select class="select" id="nd-title" name="ndTitle">${TITLES_NAME.map(v => `<option>${v}</option>`).join('')}</select></div>
           <div class="field"><label for="nd-name">Full name (as on CNIC) <span class="req">*</span></label><input class="input" id="nd-name" name="ndName" maxlength="100"><div class="err" data-err="ndName"></div></div>
           <div class="field"><label for="nd-father" id="nd-father-l">Father / husband name</label><input class="input" id="nd-father" name="ndFather" maxlength="100"></div>
-          <div class="field"><label for="nd-cnic" id="nd-cnic-l">CNIC <span class="req">*</span></label><input class="input mono" id="nd-cnic" name="ndCnic" inputmode="numeric" maxlength="20" placeholder="35202-1234567-8"><div class="err" data-err="ndCnic"></div></div>
+          <div class="field"><label for="nd-cnic" id="nd-cnic-l">CNIC (optional)</label><input class="input mono" id="nd-cnic" name="ndCnic" inputmode="numeric" maxlength="20" placeholder="35202-1234567-8"><div class="err" data-err="ndCnic"></div></div>
           <div class="field"><label for="nd-phone">Mobile <span class="req">*</span></label><input class="input" id="nd-phone" name="ndPhone" inputmode="tel" maxlength="16" placeholder="0300-1234567"><div class="err" data-err="ndPhone"></div></div>
           <div class="field"><label for="nd-email">E-mail</label><input class="input" id="nd-email" name="ndEmail" type="email" maxlength="120" placeholder="For e-mailing the receipt"><div class="err" data-err="ndEmail"></div></div>
           <div class="field"><label for="nd-city">City <span class="req">*</span></label><input class="input" id="nd-city" name="ndCity" list="city-list" maxlength="60" value="Islamabad"><datalist id="city-list">${CITIES.map(c => `<option value="${esc(c)}">`).join('')}</datalist><div class="err" data-err="ndCity"></div></div>
@@ -3297,7 +3366,7 @@ function bindNewReceipt() {
     if (!newDonor) setTimeout(() => q.focus(), 50);
     /* new donor inline behaviour */
     const ndType = $('#nd-type');
-    ndType.addEventListener('change', () => { const org = ndType.value === 'Organization'; $('#nd-title').value = org ? 'M/s' : 'Mr.'; $('#nd-father-l').textContent = org ? 'Contact person' : 'Father / husband name'; $('#nd-cnic-l').innerHTML = org ? 'NTN / registration no.' : 'CNIC <span class="req">*</span>'; $('#nd-cnic').placeholder = org ? 'e.g. 1234567-8' : '35202-1234567-8'; });
+    ndType.addEventListener('change', () => { const org = ndType.value === 'Organization'; $('#nd-title').value = org ? 'M/s' : 'Mr.'; $('#nd-father-l').textContent = org ? 'Contact person' : 'Father / husband name'; $('#nd-cnic-l').innerHTML = org ? 'NTN / registration no.' : 'CNIC (optional)'; $('#nd-cnic').placeholder = org ? 'e.g. 1234567-8' : '35202-1234567-8'; });
     $('#nd-cnic').addEventListener('input', e => { if (ndType.value === 'Individual') e.target.value = fmtCNIC(e.target.value); dupCheck(); });
     $('#nd-phone').addEventListener('input', dupCheck);
     $('#nd-phone').addEventListener('blur', e => { if (validPhone(e.target.value)) e.target.value = fmtPhone(e.target.value); });
@@ -3321,8 +3390,8 @@ function bindNewReceipt() {
     if (lnList.children.length >= MAX_LINES) return;
     const row = document.createElement('div'); row.className = 'ln-row';
     row.innerHTML = `<span class="ln-no"></span>
-      <div class="ln-cell"><select class="select ln-cat" aria-label="Fund type">${optCat(l.category || (donor && donor.preferred) || 'Zakat')}</select><input class="input ln-cat-o ${l.category === 'Other' ? '' : 'hidden'}" maxlength="40" placeholder="Specify fund type" value="${esc(l.categoryOther || '')}"></div>
-      <div class="ln-cell"><select class="select ln-prog" aria-label="Programme">${groupedOptions(PROGRAM_GROUPS, l.program || GENERAL)}</select><input class="input ln-prog-o ${l.program === PROG_OTHER ? '' : 'hidden'}" maxlength="60" placeholder="Specify the purpose" value="${esc(l.programOther || '')}"></div>
+      <div class="ln-cell"><select class="select ln-cat" aria-label="Fund type">${optCat(l.category || (donor && donor.preferred) || 'Zakat')}</select><input class="input ln-cat-o ${l.category === 'Other' ? '' : 'hidden'}" maxlength="40" data-other="donor.fund" list="akf-oth-donor.fund" placeholder="Specify fund type" value="${esc(l.categoryOther || '')}"></div>
+      <div class="ln-cell"><select class="select ln-prog" aria-label="Programme">${groupedOptions(PROGRAM_GROUPS, l.program || GENERAL)}</select><input class="input ln-prog-o ${l.program === PROG_OTHER ? '' : 'hidden'}" maxlength="60" data-other="donor.purpose" list="akf-oth-donor.purpose" placeholder="Specify the purpose" value="${esc(l.programOther || '')}"></div>
       <div class="ln-cell ln-dcell"><select class="select ln-kind mix-only" aria-label="Money or goods"><option value="money">Money</option><option value="inkind" ${l.kind === 'inkind' ? 'selected' : ''}>Goods (in-kind)</option></select><input class="input ln-det" maxlength="60" placeholder="${isIK() ? 'e.g. blankets, flour 20 kg bags' : 'e.g. sponsor 2 orphans'}" aria-label="Details or items" value="${esc(l.detail || '')}"><div class="ln-qty-row ik-only"><input class="input ln-qty mono" inputmode="decimal" maxlength="9" placeholder="Qty" aria-label="Quantity" value="${l.qty ? esc(l.qty) : ''}"><select class="select ln-unit" aria-label="Unit">${IK_UNITS.map(u => `<option ${u === (l.unit || 'pcs') ? 'selected' : ''}>${u}</option>`).join('')}</select></div></div>
       <input class="input ln-amt mono" inputmode="numeric" maxlength="13" placeholder="0" aria-label="Amount in rupees" value="${l.amount ? esc(NUM.format(l.amount)) : ''}">
       <button type="button" class="btn-icon ln-x" aria-label="Remove line">${ic('x')}</button>`;
@@ -3392,8 +3461,8 @@ function bindNewReceipt() {
   const drawSig = () => { const s = S.signatories.find(x => x.id === f.signatory.value); $('#nr-sig-prev').innerHTML = s ? `<div class="sig-saved"><img src="${esc(S.signatures[s.sigId])}" alt="Signature of ${esc(s.name)}"><div><b>${esc(s.name)}</b><span class="muted small">${esc(s.designation)}</span></div></div>` : ''; };
   f.signatory.addEventListener('change', () => { drawSig(); setErr(f, 'signatory', ''); });
   $('#nr-sig-add').addEventListener('click', async () => {
-    const rec = await signatoryForm(null);
-    if (rec) { f.signatory.innerHTML = `<option value="">Select signatory…</option>` + activeSignatories().map(s => `<option value="${esc(s.id)}" ${s.id === rec.id ? 'selected' : ''}>${esc(s.name)} · ${esc(s.designation)}</option>`).join(''); drawSig(); setErr(f, 'signatory', ''); }
+    const rec = await signatoryForm(S.signatories.find(s => s.userId === ME.id) || null, true);
+    if (rec) { f.signatory.innerHTML = `<option value="">Select signatory…</option>` + mySigs().map(s => `<option value="${esc(s.id)}" ${s.id === rec.id ? 'selected' : ''}>${esc(s.name)} · ${esc(s.designation)}</option>`).join(''); drawSig(); setErr(f, 'signatory', ''); }
   });
   $('#nr-cancel').addEventListener('click', async () => { if (f.dataset.dirty) { const r = await ask({ title: 'Discard this receipt?', message: 'The details you entered will be lost.', ok: 'Discard', danger: true }); if (!r.ok) return; } f.dataset.dirty = ''; go('donations'); });
   drawDonor(); drawSig(); updateSummary();
@@ -3410,7 +3479,7 @@ function bindNewReceipt() {
       const isOrg = v('ndType') === 'Organization';
       nd = { type: isOrg ? 'Organization' : 'Individual', title: v('ndTitle'), name: v('ndName').replace(/\s+/g, ' '), father: v('ndFather').replace(/\s+/g, ' '), cnic: isOrg ? '' : fmtCNIC(v('ndCnic')), ntn: isOrg ? v('ndCnic') : '', phone: fmtPhone(v('ndPhone')), email: v('ndEmail').toLowerCase(), city: v('ndCity'), address: v('ndAddr'), channel: v('ndChannel'), consent: f.ndConsent.checked, preferred: 'Zakat', status: 'Active', notes: '' };
       if (!validName(nd.name)) fail('ndName', 'Enter the donor’s full name.');
-      if (!isOrg && !validCNIC(nd.cnic)) fail('ndCnic', 'Enter a valid 13-digit CNIC.');
+      if (nd.cnic && !validCNIC(nd.cnic)) fail('ndCnic', 'This CNIC is not complete. Enter all 13 digits or leave it empty.');
       if (isOrg && nd.ntn && !/^[A-Za-z0-9\-\/]{4,20}$/.test(nd.ntn)) fail('ndCnic', 'Letters, digits and dashes only.');
       if (!validPhone(nd.phone)) fail('ndPhone', 'Enter a valid mobile number, e.g. 0300-1234567.');
       if (nd.email && !validEmail(nd.email)) fail('ndEmail', 'Enter a valid e-mail.');
@@ -3418,6 +3487,7 @@ function bindNewReceipt() {
       if (nd.address.length < 4) fail('ndAddr', 'Address is required for the receipt.');
       const dup = S.donors.find(d => (nd.cnic && d.cnic === nd.cnic) || (nd.ntn && d.ntn && d.ntn.toLowerCase() === nd.ntn.toLowerCase()));
       if (dup) fail('ndCnic', `Already registered to ${dup.name} (${dup.id}). Select that donor instead.`);
+      const same = S.donors.find(d => sameDonor(d, nd)); if (same && !dup) fail('ndName', `This donor is already registered as ${same.id}. Select that donor instead.`);
     }
     /* lines */
     const lines = readLines().filter(l => l.amount || l.detail);
@@ -3476,8 +3546,8 @@ function bindNewReceipt() {
     if (co) { if (!validName(co.name)) fail('coName', 'Use letters only.'); if (v('coMobile') && !validPhone(v('coMobile'))) fail('coMobile', 'Enter a valid mobile number.'); if (co.email && !validEmail(co.email)) fail('coEmail', 'Enter a valid e-mail.'); }
     else if (v('coMobile') || v('coEmail')) { fail('coName', 'Enter the C/O name for these contact details.'); f.querySelector('.co-box').open = true; }
     /* signatory */
-    const sg = S.signatories.find(x => x.id === f.signatory.value);
-    if (needPay && !sg) fail('signatory', 'Select who received the donation (or add a signature).');
+    const sg = S.signatories.find(x => x.id === f.signatory.value && x.userId === ME.id);
+    if (needPay && !sg) fail('signatory', 'Add your own signature. Only the signature of the person signed in is printed on the receipt.');
     if (bad) { const first = f.querySelector('[aria-invalid="true"]') || f.querySelector('.err:not(:empty)'); if (first) { first.scrollIntoView({ block: 'center', behavior: 'smooth' }); first.focus && setTimeout(() => first.focus({ preventScroll: true }), 250); } toast('Please complete the highlighted fields.', 'warn'); return; }
     const dnPre = donor || null;
     if (dnPre && needPay) {
@@ -3525,7 +3595,7 @@ function bindNewReceipt() {
       await persist();
       f.dataset.dirty = '';
       UI.newDone = { donationId: x ? x.id : '', pledgeId: pledge && plan ? pledge.id : (pledge ? pledge.id : ''), ackId: ack ? ack.id : '', newDonor: !donor, donorId: dn.id };
-      if (ack && S.settings.autoServer && S.settings.serverUrl && ack.to.email) { const r = await serverDeliver(ack, await receiptPDF(x)); if (r === 'sent') await markSent(ack, 'Receipt server (e-mail)', 'automatic, PDF attached'); }
+      if (ack && S.settings.autoServer && S.settings.serverUrl && ack.to.email) { const r = await serverDeliver(ack, await receiptPDF(x)); if (r === 'sent') await markSent(ack, (ERP ? 'Alkhidmat e-mail' : 'Receipt server (e-mail)'), 'automatic, PDF attached'); }
       buildChrome(); render(); window.scrollTo({ top: 0 });
       toast(x ? `Saved · ${x.receipt} is pending ${isInKind(x) ? 'receipt in store' : 'Finance verification'}` : `Pledge ${pledge.id} saved`, 'success');
     } catch (err) { console.error(err); toast('Could not save: ' + (err.message || err), 'error'); }
@@ -3605,9 +3675,9 @@ async function finishVerification(x) {
   await audit('RECEIPT_ISSUED', x.receipt, 'Official receipt issued on verification');
   await persist();
   closeModal(); buildChrome(); render();
-  if (S.settings.autoServer && S.settings.serverUrl && m.to.email) {
+  if ((ERP || (S.settings.autoServer && S.settings.serverUrl)) && m.to.email) {   // ERP: the thank-you e-mail on verification is automatic
     const res = await serverDeliver(m, await receiptPDF(x));
-    if (res === 'sent') { await markSent(m, 'Receipt server (e-mail)', 'automatic on verification'); toast(`${x.receipt} verified. Thank-you e-mail with receipt sent automatically.`, 'success'); buildChrome(); render(); return; }
+    if (res === 'sent') { await markSent(m, (ERP ? 'Alkhidmat e-mail' : 'Receipt server (e-mail)'), 'automatic on verification'); toast(`${x.receipt} verified. Thank-you e-mail with receipt sent automatically.`, 'success'); buildChrome(); render(); return; }
     toast('Automatic e-mail failed: ' + res + '. Send it manually.', 'warn');
   }
   toast(`${x.receipt} verified.${can('messages') ? '' : ' RMD will send the thank-you with the receipt.'}`, 'success', 6000);
@@ -3904,7 +3974,7 @@ function correctionDetail(id) {
       <div class="alert alert-info">${ic('info')}<span><b>${esc(c.reason)}</b><br>${esc(c.note)}${c.decisionNote ? `<br><br><b>Finance note:</b> ${esc(c.decisionNote)}` : ''}</span></div>
       <div class="tbl-wrap"><table class="tbl compact"><thead><tr><th>Field</th><th>Before</th><th>After</th><th></th></tr></thead><tbody>${c.changes.map(z => `<tr><td>${esc(z.label)}</td><td class="muted"><s>${esc(z.from || '—')}</s></td><td><b>${esc(z.to || '—')}</b></td><td>${z.fin ? '<span class="badge b-bad">Financial</span>' : '<span class="badge b-info">Detail</span>'}</td></tr>`).join('')}</tbody></table></div>
       ${c.profile ? '<p class="small muted" style="margin-top:10px">The donor profile is corrected too.</p>' : ''}`,
-    foot: canDecide ? `<button class="btn btn-secondary" data-act="cor-reject" data-id="${esc(c.id)}">Reject</button><button class="btn btn-success" data-act="cor-approve" data-id="${esc(c.id)}">${ic('check')}Approve</button>` : `<button class="btn btn-primary" data-act="modal-close">Close</button>`
+    foot: canDecide ? `<button class="btn btn-success" data-act="cor-approve" data-id="${esc(c.id)}">${ic('check')}Approve</button><button class="btn btn-ghost" style="color:var(--danger)" data-act="cor-reject" data-id="${esc(c.id)}">Reject</button>` : `<button class="btn btn-primary" data-act="modal-close">Close</button>`
   });
 }
 VIEWS.corrections = {
@@ -3915,8 +3985,8 @@ VIEWS.corrections = {
     <div class="card policy-card"><div class="card-h"><h3>${ic('shieldCheck')}Correction standard</h3></div>
       <ol class="policy">
         <li><b>Never delete, never overwrite.</b> The original entry, every corrected version, who changed it, when and why are kept for audit.</li>
-        <li><b>Not yet verified by Finance:</b> the recording officer corrects it with a reason. It becomes Rev 1, Rev 2… The person who corrected it cannot verify it.</li>
-        <li><b>Verified, detail mistake</b> (spelling of name, CNIC, address, contact, C/O, programme, cheque number): a correction request is approved by a Finance officer other than the requester. The <b>same receipt number</b> is reissued marked “REVISED · Rev n”.</li>
+        <li><b>Not yet verified by Finance:</b> the recording officer corrects it with a reason. It becomes Rev 1, Rev 2… in the office history only; the Donor Copy stays clean. The person who corrected it cannot verify it.</li>
+        <li><b>Verified, detail mistake</b> (spelling of name, CNIC, address, contact, C/O, programme, cheque number): a correction request is approved by a Finance officer other than the requester. The <b>same receipt number</b> is reissued marked “Corrected copy” with the date.</li>
         <li><b>Verified, money mistake</b> (amount, fund type such as Zakat / Sadaqah, date, payment mode, quantity of goods): never edited. After approval the receipt is <b>cancelled</b> and a <b>new receipt number</b> issued, marked “Replaces RCT-…”. Totals and reports use only the new receipt.</li>
         <li><b>The donor is informed.</b> If the donor already received a copy, the corrected receipt is sent with a message that the earlier copy is no longer valid.</li>
         <li><b>Evidence.</b> Every correction states the reason and the proof checked (CNIC copy, bank statement, store record).</li>
@@ -3933,6 +4003,10 @@ VIEWS.corrections = {
       </tbody></table></div>` : emptyState('fix', 'No corrections yet', 'Open a receipt and choose “Correct entry” or “Request correction”.')}</div>`;
   }
 };
+/* What the donor may see of a correction. A correction made before Finance verified the receipt is office work: the donor copy shows nothing.
+   A correction approved after verification shows "Corrected copy" with its date, so an earlier copy can be told apart. The Rev numbers stay in the office history. */
+const corrOf = x => (x.revisions || []).filter(r => r.approvedBy).pop() || null;
+console.assert(corrOf({}) === null && corrOf({ revisions: [{ rev: 1, approvedBy: '' }, { rev: 2, approvedBy: '' }] }) === null && corrOf({ revisions: [{ rev: 1, approvedBy: 'a' }, { rev: 2, approvedBy: '' }] }).rev === 1, 'corrOf: only approved corrections show on the donor copy');
 /* ---------- Receipt: A4 Donor Copy (matches the printed receipt book) ---------- */
 const RW = 1654, RH = 2339, RL = 90, RR = 1564, RMID = 1010, NAVY = '#14286E', PEN = '#0A2A80';
 const RF = (w, s) => `${w} ${s}px "Segoe UI", "Noto Sans", Arial, sans-serif`;
@@ -3946,11 +4020,31 @@ function cleanScan(img) {
   x.putImageData(d, 0, 0); return c;
 }
 const imgReady = img => img.complete && img.naturalWidth ? Promise.resolve(img) : new Promise((res, rej) => { img.onload = () => res(img); img.onerror = rej; });
+/* A signature for print, cut to its ink: signatures come in many shapes (the pad here, pads of other portals, imported photos) with empty space around the ink. */
+function sigInk(img) {
+  const c = document.createElement('canvas'); c.width = img.naturalWidth || img.width; c.height = img.naturalHeight || img.height;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const p = x.getImageData(0, 0, c.width, c.height).data;
+  let x0 = c.width, y0 = c.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) {
+    const i = (y * c.width + xx) * 4;
+    if (p[i + 3] < 30 || .3 * p[i] + .59 * p[i + 1] + .11 * p[i + 2] > 235) continue;   // empty or white paper
+    if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  if (x1 < 0) return c;
+  const o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
+  o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height); return o;
+}
+/* The size that keeps a w x h signature whole inside a box of mw x mh: it never grows over the lines above it. */
+const sigFit = (w, h, mw, mh) => { const s = Math.min(mw / w, mh / h); return [w * s, h * s]; };
+console.assert(sigFit(900, 260, 400, 118)[1] <= 118 && sigFit(900, 260, 400, 118)[0] <= 400 && sigFit(300, 600, 400, 118).map(Math.round).join() === '59,118' && sigFit(1200, 100, 400, 118).map(Math.round).join() === '400,33',
+  'sigFit: a signature of any shape stays inside its box');
+function drawSig(ctx, si, x, bottom, mw, mh, centre) { const [w, h] = sigFit(si.width, si.height, mw, mh); ctx.drawImage(si, x + (centre ? (mw - w) / 2 : 0), bottom - h, w, h); }
 async function art() {
   if (ART) return ART;
   const [logo, icons] = await Promise.all(['#logo-src', '#icons-src'].map(s => imgReady($(s))));
   const sigCache = {};
-  ART = { logo, icons: rawCanvas(icons), badges: badgeCanvas(), sig:async url => sigCache[url] || (sigCache[url] = await imgReady(Object.assign(new Image(), { src: url }))) };
+  ART = { logo, icons: rawCanvas(icons), badges: badgeCanvas(), sig:async url => sigCache[url] || (sigCache[url] = sigInk(await imgReady(Object.assign(new Image(), { src: url })))) };
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
   return ART;
 }
@@ -4021,8 +4115,8 @@ function receiptData(x, mask) {
   const isOrg = sn.type === 'Organization';
   const m = (v, f) => mask && v ? f(v) : v;
   return {
-    serial: pad(x.serial || 0, 5), no: x.bookNo || x.receipt, date: x.date, isOrg,
-    name: `${sn.title || ''} ${sn.name || ''}`.trim(), addr1: mask && sn.address ? 'Hidden for your role' : sn.address, addr2: sn.city,
+    donorNo: x.donorId || '', no: x.bookNo || x.receipt, date: x.date, isOrg,
+    name: `${sn.title || ''} ${sn.name || ''}`.trim().toUpperCase(), addr1: mask && sn.address ? 'Hidden for your role' : sn.address, addr2: sn.city,
     mobile: m(sn.phone, maskPhone), id: isOrg ? sn.ntn : m(sn.cnic, maskCNIC), email: m(sn.email, maskEmail),
     coName: x.co ? x.co.name : '', coMobile: x.co ? m(x.co.mobile, maskPhone) : '', coEmail: x.co ? m(x.co.email, maskEmail) : '',
     ik: isInKind(x), payBy: isInKind(x) ? ['Goods / items', ikOf(x).condition, grnText(ikOf(x).grn)].filter(Boolean).join(' · ') : x.mode === 'Cash' ? 'Cash' : `${x.mode}${x.ref ? ' # ' + x.ref : ''}`, bank: isInKind(x) ? ikOf(x).valuation || '' : bankLabel(x) || (x.mode === 'Cash' ? '—' : ''),
@@ -4051,9 +4145,10 @@ async function drawReceipt(canvas, x, { mask = false } = {}) {
   ctx.fillStyle = NAVY; rrect(ctx, 1290, 196, 274, 74, 18); ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = RF(600, 46); ctx.fillText('RECEIPT', 1427, 250);
   ctx.fillStyle = NAVY; ctx.font = RF(600, 27); ctx.fillText('Donor Copy', 1427, 308);
-  const tag = x.replacedBy ? `CANCELLED · see ${x.replacedBy}` : x.rev ? `REVISED · Rev ${x.rev}` : x.replaces ? `Replaces ${x.replaces}` : '';
-  if (tag) { ctx.fillStyle = '#C0262D'; ctx.font = RF(800, 22); ctx.fillText(rfit(ctx, tag, 330, 800, 22, 14), 1427, 342); }
-  ctx.fillStyle = '#111'; ctx.font = '700 76px Consolas, "Courier New", monospace'; ctx.fillText(d.serial, 1010, 300);
+  const corr = corrOf(x), tag = x.replacedBy ? `CANCELLED · see ${x.replacedBy}` : corr ? `Corrected copy · ${fmtDate(corr.at)}` : x.replaces ? `Replaces ${x.replaces}` : '';
+  if (tag) { ctx.fillStyle = x.replacedBy ? '#C0262D' : NAVY; ctx.font = RF(800, 22); ctx.fillText(rfit(ctx, tag, 330, 800, 22, 14), 1427, 342); }
+  // the donor's own number (the receipt number is on the "No." line below); 500 wide = the gap between the name block and the RECEIPT box
+  if (d.donorNo) { ctx.fillStyle = NAVY; ctx.font = RF(600, 24); ctx.fillText('Donor No.', RMID, 248); ctx.fillStyle = '#111'; ctx.fillText(rfit(ctx, d.donorNo, 500, 700, 50, 24), RMID, 306); }
   rfield(ctx, 'No.', 820, 1172, 395, d.no); rfield(ctx, 'Date', 1190, RR, 395, fmtDate(d.date));
   // donor block
   const Y = [478, 553, 628, 703, 778, 853, 928];
@@ -4095,7 +4190,7 @@ async function drawReceipt(canvas, x, { mask = false } = {}) {
   const ys = yw + 185;
   ctx.fillStyle = NAVY; ctx.font = RF(500, 35); ctx.fillText('Received by: Sign.', RL, ys);
   const sx = RL + ctx.measureText('Received by: Sign.').width + 10; hl(ctx, sx, 790, ys + 6);
-  if (d.sig) { try { const si = await A.sig(d.sig); const bw = 790 - sx - 10, bh = bw * si.height / si.width; ctx.drawImage(si, sx + 5, ys - bh + 22, bw, bh); } catch {} }
+  if (d.sig) { try { drawSig(ctx, await A.sig(d.sig), sx + 5, ys + 14, 790 - sx - 10, 92, true); } catch {} }   // kept compact on the Sign. line; box ends well below the second "amount in words" line (yw + 72 = ys - 113)
   ctx.fillStyle = NAVY; ctx.font = RF(500, 35); ctx.fillText('Name:', 285, ys + 88); hl(ctx, 395, 790, ys + 94);
   if (d.rbName) { ctx.fillStyle = PEN; ctx.fillText(rfit(ctx, d.rbName, 380, 600, 33, 20), 405, ys + 84); }
   // stamp
@@ -4110,7 +4205,7 @@ async function drawReceipt(canvas, x, { mask = false } = {}) {
   // e-receipt line
   ctx.textAlign = 'left'; ctx.fillStyle = '#5B6B82'; ctx.font = RF(500, 21);
   const stTxt = x.replacedBy ? `CANCELLED, replaced by ${x.replacedBy}` : Object.assign(isMixed(x) ? { Pending: `Pending: ${waitingFor(x)}`, Verified: `Verified by Finance; goods received${x.storeRec ? ' (' + x.storeRec.grn + ')' : ''}` } : d.ik ? { Pending: 'Pending receipt in store', Verified: `Received in store${x.storeRec ? ' (' + x.storeRec.grn + ')' : ''}` } : { Pending: 'Pending Finance verification', Verified: 'Verified by Finance' }, { Rejected: 'REJECTED', Voided: 'VOIDED' })[d.status] || d.status;
-  const extra = [x.rev ? `Revision ${x.rev} of ${fmtDate(x.revisions[x.revisions.length - 1].at)}` : '', x.replaces ? `Replaces ${x.replaces}` : '', hasGoods(x) && ikOf(x).at ? `Goods received at ${ikOf(x).at}` : '', isMixed(x) ? `Money ${money(moneyTotal(x))} + goods ${money(goodsTotal(x))} (est.)` : ''].filter(Boolean).join(' · ');
+  const extra = [corr ? `Corrected copy of ${fmtDate(corr.at)}` : '', x.replaces ? `Replaces ${x.replaces}` : '', hasGoods(x) && ikOf(x).at ? `Goods received at ${ikOf(x).at}` : '', isMixed(x) ? `Money ${money(moneyTotal(x))} + goods ${money(goodsTotal(x))} (est.)` : ''].filter(Boolean).join(' · ');
   ctx.fillText(rfit(ctx, `e-Receipt ${x.receipt} · Verification code ${code} · Status: ${stTxt} · Issued ${fmtDT(x.createdAt)} PKT${extra ? ' · ' + extra : ''}`, 1000, 500, 21, 13), RL, ys + 160);
   // footer + programme strip
   ctx.fillStyle = NAVY; ctx.textAlign = 'center'; const fy = ys + 210;
@@ -4179,7 +4274,7 @@ async function showReceipt(id) {
       <img class="rc-img" src="${esc(src)}" alt="Receipt ${esc(x.receipt)} for ${esc(sn.name || '')}, ${esc(money(x.amount))}">`,
     foot: `${x.status === 'Verified' && can('donation.void') ? `<button class="btn btn-ghost left" style="color:var(--danger)" data-act="don-void" data-id="${esc(x.id)}">${ic('ban')}Void</button>` : ''}
       ${['Pending', 'Verified'].includes(x.status) && can('donation.create') && !openCorrection(x) && !mask ? `<button class="btn btn-secondary ${x.status === 'Verified' && can('donation.void') ? '' : 'left'}" data-act="cor-request" data-id="${esc(x.id)}">${ic('fix')}${x.status === 'Pending' ? 'Correct entry' : 'Request correction'}</button>` : ''}
-      ${x.status === 'Pending' && canVerifyX(x) ? `<button class="btn btn-secondary" data-act="don-reject" data-id="${esc(x.id)}">Reject</button><button class="btn btn-success" data-act="don-verify" data-id="${esc(x.id)}">${ic('check')}Verify</button>` : ''}
+      ${x.status === 'Pending' && canVerifyX(x) ? `<button class="btn btn-success" data-act="don-verify" data-id="${esc(x.id)}">${ic('check')}Verify</button><button class="btn btn-ghost" style="color:var(--danger)" data-act="don-reject" data-id="${esc(x.id)}">Reject</button>` : ''}
       <button class="btn btn-secondary" data-act="receipt-print" data-id="${esc(x.id)}">${ic('printer')}Print</button><button class="btn btn-primary" data-act="modal-close">Done</button>`
   });
 }
@@ -4223,7 +4318,7 @@ async function donorStatementCore(donorId, fyStart) {
   ctx.font = RF(500, 24); ctx.fillStyle = '#3B4A60';
   ['This statement lists donations received and verified by Alkhidmat Foundation Islamabad during the financial year shown.', 'Donations to Alkhidmat Foundation are exempted from income tax as per applicable law. Please retain this statement with your tax records.'].forEach((t, i) => ctx.fillText(rfit(ctx, t, RR - RL, 500, 24, 16), RL, y + 170 + i * 36));
   const sg = defaultSignatory(), sy = Math.min(y + 420, RH - 420);
-  if (sg && S.signatures[sg.sigId]) { try { const si = await A.sig(S.signatures[sg.sigId]); ctx.drawImage(si, RL, sy - 110, 360, 104); } catch {} }
+  if (sg && S.signatures[sg.sigId]) { try { drawSig(ctx, await A.sig(S.signatures[sg.sigId]), RL, sy - 6, 360, 104); } catch {} }
   hl(ctx, RL, RL + 420, sy, 2); ctx.fillStyle = NAVY; ctx.font = RF(600, 26); ctx.fillText(sg ? `${sg.name}, ${sg.designation}` : 'Authorised signatory', RL, sy + 36);
   ctx.save(); ctx.translate(1290, sy - 40); ctx.rotate(-0.035); ctx.strokeStyle = 'rgba(25,45,125,.9)'; ctx.lineWidth = 5; ctx.strokeRect(-212, -84, 424, 168); ctx.fillStyle = 'rgba(25,45,125,.92)'; ctx.textAlign = 'center'; ctx.font = RF(800, 40); ctx.fillText('Al Khidmat Foundation', 0, -22); ctx.fillText('Islamabad.', 0, 24); ctx.font = '700 38px Consolas, monospace'; ctx.fillText(o.stampPhone, 0, 66); ctx.restore();
   ctx.textAlign = 'center'; ctx.fillStyle = NAVY; ctx.font = RF(500, 26); RECEIPT_FOOTER(o.ntn).forEach((t, i) => ctx.fillText(rfit(ctx, t, RR - RL, 500, 26), RW / 2, RH - 330 + i * 38));
@@ -4651,7 +4746,7 @@ async function goLive() {
     else { const tmp = genPassword(12); u.cred = await wrapDEK(DEK, tmp); u.mustChange = true; issued.push([u, tmp]); }
     delete u.testLogin; u.pwChangedAt = Date.now();
   }
-  saveUsers(); meta.set({}); S.settings.testMode = false; S.settings.idleMin = Math.min(S.settings.idleMin || 10, 15);
+  saveUsers(); meta.set({}); S.settings.testMode = false; S.settings.idleMin = Math.min(S.settings.idleMin || 30, 30);
   await audit('GO_LIVE', ME.email, `Testing mode switched off; ${issued.length} one-time password(s) issued`); await persist();
   buildChrome(); render();
   openModal({ title: 'Portal is live', size: 'sm', body: `<div class="alert alert-success">${ic('check')}<span>Passwords are now required. Give each person their one-time password in person or by phone. It is shown <b>only once</b>.</span></div>
@@ -4953,18 +5048,19 @@ async function donorTemplate() {
 }
 function donorRow(d, stats, pii) {
   const s = stats[d.id] || {};
-  return [d.id, d.legacyId || '', d.title || '', d.name, d.father || '', d.type, pii ? d.cnic || '' : maskCNIC(d.cnic || ''), d.ntn || '', pii ? d.phone || '' : maskPhone(d.phone || ''), pii ? d.email || '' : (d.email ? maskEmail(d.email) : ''), d.city || '', pii ? d.address || '' : '', d.preferred || '', d.channel || '', d.consent ? 'Yes' : 'No', d.since || '', d.owner || d.createdBy || '', d.status, s.total || 0, s.count || 0, s.last || '', d.notes || ''];
+  const p = v => pii ? v || '' : '';   // names only unless this is the one approved full file
+  return [d.id, d.legacyId || '', d.title || '', d.name, p(d.father), d.type, p(d.cnic), p(d.ntn), p(d.phone), p(d.email), d.city || '', p(d.address), d.preferred || '', d.channel || '', d.consent ? 'Yes' : 'No', d.since || '', d.owner || d.createdBy || '', d.status, s.total || 0, s.count || 0, s.last || '', p(d.notes)];
 }
 async function exportDonorsXlsx(list) {
   if (!guard('export')) return;
   await withLoader('Building the Excel file…', async () => {
-    const stats = donorStatsMap(), pii = showPII();
+    const stats = donorStatsMap(), pii = fullPII();
     const head = ['Donor ID', 'Old donor ID / code', 'Title', 'Full name', 'Father / husband / contact', 'Type', 'CNIC', 'NTN', 'Mobile', 'E-mail', 'City', 'Address', 'Preferred fund', 'Preferred contact', 'Consent', 'Donor since', 'Assigned RMO', 'Status', 'Verified total (Rs)', 'Gifts', 'Last gift', 'Notes'];
     const rows = [head]; let k = 0;
     for (const d of list || S.donors) { rows.push(donorRow(d, stats, pii)); if (++k % 5000 === 0) { setLoader(Math.round(k / (list || S.donors).length * 100), `${NUM.format(k)} donors`); await yieldUI(); } }
     setLoader(100, 'Compressing…');
     await downloadXlsx(`Alkhidmat_Donors_${todayISO()}.xlsx`, [{ name: 'Donors', rows, widths: [22, 16, 7, 28, 26, 13, 18, 14, 15, 26, 14, 34, 16, 14, 9, 12, 26, 9, 16, 7, 12, 30] }]);
-    await audit('EXPORT', 'donors (Excel)', `${rows.length - 1} donors${pii ? '' : ', personal data masked'}`); persist();
+    await audit('EXPORT', 'donors (Excel)', `${rows.length - 1} donors${pii ? ', FULL FILE (approved request)' : ', names only'}`); persist();
   });
   toast('Excel file saved.', 'success');
 }
@@ -4999,7 +5095,7 @@ VIEWS.import = {
         <div id="imp-result">${an ? importReviewHTML(an) : ''}</div>
       </div>
       <div class="card"><div class="card-h"><h3>${ic('download')}Export to Excel</h3></div>
-        <div class="exp-row"><div><b>All donors</b><span class="muted small">${NUM.format(S.donors.length)} donors, with totals and last gift${showPII() ? '' : ' · personal data masked for your role'}</span></div><button class="btn btn-primary btn-sm" data-act="exp-donors">${ic('download')}Donors .xlsx</button></div>
+        <div class="exp-row"><div><b>All donors</b><span class="muted small">${NUM.format(S.donors.length)} donors, with totals and last gift${fullPII() ? '' : ' · names only: CNIC, mobile, e-mail and address are left out' + (ERP ? ' (the full file needs four approvals: Donors → Full donor file)' : '')}</span></div><button class="btn btn-primary btn-sm" data-act="exp-donors">${ic('download')}Donors .xlsx</button></div>
         <div class="exp-row"><div><b>Donations</b><span class="muted small">Every receipt in the period, money and goods in separate columns</span>
           <div class="exp-dates"><input class="input" type="date" id="exp-from" value="${todayISO().slice(0, 4)}-01-01" aria-label="From"><span>to</span><input class="input" type="date" id="exp-to" value="${todayISO()}" aria-label="To"></div></div><button class="btn btn-primary btn-sm" data-act="exp-donations">${ic('download')}Donations .xlsx</button></div>
         <h4 class="sec-title">Recent imports</h4>
@@ -5085,7 +5181,7 @@ function teamStats(from) {
 function teamTable(rows, compact) {
   const top = Math.max(1, ...rows.map(r => r.amount));
   return rows.length ? `<div class="tbl-wrap"><table class="tbl team-tbl"><thead><tr><th>Officer</th><th class="right">Donors</th><th class="right">Receipts</th><th>Collected</th><th class="right">Pending</th><th class="right">Overdue pledges</th>${compact ? '' : '<th class="right">New donors</th><th>Last activity</th>'}</tr></thead><tbody>
-    ${rows.map((r, i) => `<tr class="click" data-act="team-officer" data-email="${esc(r.u.email)}" tabindex="0"><td><div class="team-who"><span class="avatar">${esc(initials(r.u.name))}</span><div><b>${esc(r.u.name)}</b><span class="t-sub">${esc(ROLES[r.u.role] ? ROLES[r.u.role].label.split(' (')[0] : r.u.role)}${i === 0 && r.amount ? ' · 🏆 top this period' : ''}</span></div></div></td>
+    ${rows.map((r, i) => `<tr class="click" data-act="team-officer" data-email="${esc(r.u.email)}" tabindex="0"><td><div class="team-who"><span class="avatar">${esc(initials(r.u.name))}</span><div><b>${esc(r.u.name)}</b><span class="t-sub">${esc(r.u.designation || (ROLES[r.u.role] ? ROLES[r.u.role].label.split(' (')[0] : r.u.role))}${i === 0 && r.amount ? ' · 🏆 top this period' : ''}</span></div></div></td>
       <td class="right num">${NUM.format(r.donors)}</td><td class="right num">${NUM.format(r.receipts)}</td>
       <td style="min-width:170px"><div class="prog"><span style="width:${Math.round(r.amount / top * 100)}%"></span></div><div class="t-sub">${esc(money(r.amount))} · ${esc(money(r.verified))} verified</div></td>
       <td class="right num">${r.pending ? `<span class="badge b-warn">${r.pending}</span>` : '0'}</td><td class="right num">${r.overdue ? `<span class="badge b-bad">${r.overdue}</span>` : '0'}</td>
@@ -5132,7 +5228,7 @@ function rmoDashboardHTML() {
   const tasks = myDue.slice(0, 6).map(({ p, s, state }) => ({ tone: state === 'Overdue' ? 'b-bad' : 'b-warn', icon: 'bell', title: `${state === 'Overdue' ? 'Overdue' : 'Due ' + fmtDate(s.due)}: ${donorName(donorById(p.donorId))} · installment ${s.n}/${p.count}`, text: `${money(pledgeStats(p).remaining[p.schedule.indexOf(s)] || s.amount)} · ${pledgePurpose(p)}`, actions: [['inst-remind', 'Remind', { id: p.id, n: s.n }], ['inst-record', 'Record payment', { id: p.id, n: s.n }]] }))
     .concat(q.slice(0, 6).map(m => ({ tone: m.type === 'thanks' ? 'b-ok' : 'b-info', icon: m.type === 'thanks' ? 'heart' : 'msg', title: `${MSG_TYPES[m.type]} for ${m.to.name}`, text: m.type === 'thanks' ? 'Verified: send the receipt' : 'Tell the donor it was received', actions: [['msg-open', 'Send', { id: m.id }]] })));
   const recent = mine.slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).slice(0, 8);
-  return heroHTML(`My workspace · ${esc(ME.name.split(' ')[0])}`, `${esc(todayLong())} · ${esc(ROLES[ME.role].label)}`, [[compact(mtd), 'My verified collections this month'], [NUM.format(today.length), 'Receipts today'], [NUM.format(pend.length), 'Waiting for verification'], [NUM.format(myDue.length), 'My installments due']],
+  return heroHTML(`My workspace · ${esc(ME.name)}`, `${esc(todayLong())} · ${esc(ROLES[ME.role].label)}`, [[compact(mtd), 'My verified collections this month'], [NUM.format(today.length), 'Receipts today'], [NUM.format(pend.length), 'Waiting for verification'], [NUM.format(myDue.length), 'My installments due']],
     `<button class="btn btn-white btn-lg" data-act="new-again">${ic('plus')}New receipt</button><button class="btn btn-glass" data-act="my-receipts">${ic('receipt')}My receipts</button><button class="btn btn-glass" data-act="my-donors">${ic('users')}My donors</button>`)
   + `<div class="card attention"><div class="card-h"><h3>${ic('check')}My tasks <span class="count-pill">${tasks.length}</span></h3></div><div class="tasks">${notifHTML(tasks)}</div></div>
     <div class="kpis">
@@ -5177,7 +5273,7 @@ async function moveDonors() {
 async function teamXlsx() {
   if (!guard('export')) return;
   const st = UI.team || { period: 'mtd' }, rows = teamStats(periodStart(st.period));
-  await withLoader('Building the Excel file…', () => downloadXlsx(`RMD_Team_${st.period}_${todayISO()}.xlsx`, [{ name: 'Team', rows: [['Officer', 'E-mail', 'Role', 'Donors', 'New donors', 'Receipts', 'Collected (Rs)', 'Verified (Rs)', 'Pending receipts', 'Pending (Rs)', 'Overdue pledges', 'Due in 7 days', 'Last activity'], ...rows.map(r => [r.u.name, r.u.email, ROLES[r.u.role] ? ROLES[r.u.role].label : r.u.role, r.donors, r.newDonors, r.receipts, r.amount, r.verified, r.pending, r.pendingAmt, r.overdue, r.due, r.last ? r.last.slice(0, 16).replace('T', ' ') : ''])], widths: [24, 28, 22, 9, 11, 10, 14, 14, 14, 13, 14, 12, 18] }]));
+  await withLoader('Building the Excel file…', () => downloadXlsx(`RMD_Team_${st.period}_${todayISO()}.xlsx`, [{ name: 'Team', rows: [['Officer', 'E-mail', 'Role', 'Donors', 'New donors', 'Receipts', 'Collected (Rs)', 'Verified (Rs)', 'Pending receipts', 'Pending (Rs)', 'Overdue pledges', 'Due in 7 days', 'Last activity'], ...rows.map(r => [r.u.name, r.u.email, r.u.designation || (ROLES[r.u.role] ? ROLES[r.u.role].label : r.u.role), r.donors, r.newDonors, r.receipts, r.amount, r.verified, r.pending, r.pendingAmt, r.overdue, r.due, r.last ? r.last.slice(0, 16).replace('T', ' ') : ''])], widths: [24, 28, 22, 9, 11, 10, 14, 14, 14, 13, 14, 12, 18] }]));
 }
 
 /* =====================================================================
@@ -5200,7 +5296,7 @@ const goodsTable = (list, actions) => `<div class="tbl-wrap"><table class="tbl">
 function storeDashboardHTML() {
   const t = todayISO(), pend = goodsPending(), rec = goodsReceived(), today = rec.filter(x => (x.vGoods.at || '').slice(0, 10) === t), mo = rec.filter(x => (x.vGoods.at || '').slice(0, 7) === t.slice(0, 7));
   const notes = computeNotifications();
-  return heroHTML(`Store desk · ${esc(ME.name.split(' ')[0])}`, `${esc(todayLong())} · ${esc(ROLES[ME.role].label)} · in-kind goods only`, [[NUM.format(pend.length), 'Waiting to be received'], [compact(pend.reduce((s, x) => s + goodsTotal(x), 0)), 'Est. value waiting'], [NUM.format(today.length), 'Received today'], [NUM.format(mo.length), 'Received this month']],
+  return heroHTML(`Store desk · ${esc(ME.name)}`, `${esc(todayLong())} · ${esc(ROLES[ME.role].label)} · in-kind goods only`, [[NUM.format(pend.length), 'Waiting to be received'], [compact(pend.reduce((s, x) => s + goodsTotal(x), 0)), 'Est. value waiting'], [NUM.format(today.length), 'Received today'], [NUM.format(mo.length), 'Received this month']],
     `<button class="btn btn-white btn-lg" data-act="goods-tab" data-tab="pending">${ic('box')}Goods to receive</button><button class="btn btn-glass" data-act="goods-tab" data-tab="received">${ic('check')}Received</button>`)
   + (notes.length ? `<div class="card attention"><div class="card-h"><h3>${ic('bell')}Needs your attention <span class="count-pill">${notes.length}</span></h3></div><div class="tasks">${notifHTML(notes.slice(0, 4))}</div></div>` : '')
   + `<div class="card"><div class="card-h"><div><h3>Goods to receive</h3><div class="sub">Oldest first. Count the items, then press Receive.</div></div><button class="btn btn-ghost btn-sm" data-act="goods-tab" data-tab="pending">View all</button></div>
@@ -5221,6 +5317,43 @@ VIEWS.goods = {
       ${list.length ? goodsTable(list.slice(0, 300), true) : emptyState('box', st.tab === 'received' ? 'Nothing received yet' : 'Nothing waiting', q ? 'Try another search.' : 'In-kind donations appear here as soon as RMD records them.')}</div>`;
   },
   bind() { const q = $('#g-q'); q.addEventListener('input', debounce(() => searchRerender(q, UI.goods, 'g-q'), 220)); }
+};
+
+/* ---------- Finance verification: every money receipt that waits for Finance, in one place.
+   Uses the Verify / Reject actions of the Donations list (maker-checker included); nothing new is stored. ---------- */
+const finQueue = () => S.donations.filter(x => x.status === 'Pending' && needsMoneyCheck(x));
+VIEWS.finance = {
+  html() {
+    const st = UI.finance || (UI.finance = { tab: 'pending', q: '', mode: '' }), pend = finQueue();
+    const done = S.donations.filter(x => x.vMoney && hasMoney(x)).sort((a, b) => String(b.vMoney.at || '').localeCompare(String(a.vMoney.at || '')));
+    const q = (st.q || '').trim().toLowerCase(), isP = st.tab !== 'verified';
+    let list = isP ? pend : done;
+    if (isP && st.mode) list = list.filter(x => (x.mode || 'Other') === st.mode);
+    if (q) list = list.filter(x => [x.receipt, donorName(donorById(x.donorId)), x.mode, userName(x.createdBy)].some(v => String(v || '').toLowerCase().includes(q)));
+    const byMode = {}; pend.forEach(x => { const m = x.mode || 'Other'; byMode[m] = (byMode[m] || 0) + 1; });
+    const items = Object.entries(byMode).map(([k, n]) => ({ key: k, label: k, value: n, note: 'receipts' }));
+    const chart = !isP || !items.length ? '' : window.AKF_CHARTS ? AKF_CHARTS.bars({ id: 'fin-mode', items })
+      : `<div class="cell-actions" style="justify-content:flex-start;flex-wrap:wrap">${items.map(i => `<button class="btn btn-ghost btn-sm" data-act="fin-mode" data-mode="${esc(i.key)}">${esc(i.label)} · <b>${i.value}</b></button>`).join('')}</div>`;
+    const tab = (k, l, n) => `<button class="tab ${st.tab === k ? 'on' : ''}" data-act="fin-tab" data-tab="${k}">${esc(l)}${n ? ` <span class="count">${n}</span>` : ''}</button>`;
+    const act = x => {
+      let h = `<button class="btn btn-ghost btn-sm" data-act="receipt" data-id="${esc(x.id)}">${ic('receipt')}Receipt</button>`;
+      if (!isP) return h;
+      if (x.createdBy === ME.email || (x.correctedBy || []).includes(ME.email)) return h + `<span class="badge" title="You recorded or corrected this receipt, so another Finance officer must verify it">Needs 2nd officer</span>`;
+      return h + `<button class="btn btn-success btn-sm" data-act="don-verify" data-id="${esc(x.id)}">${ic('check')}Verify</button><button class="btn btn-ghost btn-sm" style="color:var(--danger)" data-act="don-reject" data-id="${esc(x.id)}">Reject</button>`;
+    };
+    const row = x => `<tr><td class="nowrap"><b>${esc(x.receipt || x.id)}</b></td><td class="nowrap">${fmtDate(x.date)}</td><td>${esc(donorName(donorById(x.donorId)))}</td><td class="right num">${esc(money(moneyTotal(x)))}</td><td>${esc(x.mode || '—')}</td><td>${esc(userName(x.createdBy))}</td>${isP ? '' : `<td>${esc(userName(x.vMoney.by))}<div class="small muted">${fmtDate(x.vMoney.at)}</div></td>`}<td class="right"><div class="cell-actions">${act(x)}</div></td></tr>`;
+    return `<div class="page-head"><div><h2>Finance verification</h2><p>Donation receipts whose money waits for Finance. Check the money against the bank or cash record, then verify. A receipt you recorded yourself needs another Finance officer.</p></div></div>
+    <div class="stats-strip"><div><div class="k">Waiting for Finance</div><div class="v num">${NUM.format(pend.length)}</div></div><div><div class="k">Amount waiting</div><div class="v num">${esc(compact(pend.reduce((t, x) => t + moneyTotal(x), 0)))}</div></div><div><div class="k">Verified by Finance</div><div class="v num">${NUM.format(done.length)}</div></div></div>
+    <div class="card"><div class="tabs">${tab('pending', 'To verify', pend.length)}${tab('verified', 'Verified')}</div>
+      ${chart ? `<p class="hint" style="margin:10px 0 0">Waiting receipts by payment mode. Click a bar to show only that mode${st.mode ? `. Showing: <b>${esc(st.mode)}</b> <button class="btn btn-ghost btn-sm" data-act="fin-tab" data-tab="pending">Show all</button>` : ''}.</p>${chart}` : ''}
+      <div class="toolbar"><div class="grow search-in">${ic('search')}<input class="input" id="fin-q" type="search" placeholder="Search receipt, donor, mode or officer…" value="${esc(st.q || '')}" maxlength="60" aria-label="Search receipts"></div></div>
+      ${list.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Receipt</th><th>Date</th><th>Donor</th><th class="right">Money</th><th>Mode</th><th>Recorded by</th>${isP ? '' : '<th>Verified by</th>'}<th class="right">Actions</th></tr></thead><tbody>${list.slice(0, 300).map(row).join('')}</tbody></table></div>`
+        : emptyState('check', isP ? 'Nothing waits for Finance' : 'Nothing verified yet', q || st.mode ? 'Try another search or show all.' : 'New money receipts appear here as soon as they are recorded.')}</div>`;
+  },
+  bind() {
+    const q = $('#fin-q'); q.addEventListener('input', debounce(() => searchRerender(q, UI.finance, 'fin-q'), 220));
+    $('#view').addEventListener('akf-chart-pick', e => { const d = e.detail || {}; if (d.chart === 'fin-mode' && UI.view === 'finance') { UI.finance.mode = d.key; render(); } });
+  }
 };
 
 /* ---------- My account ---------- */
@@ -5268,17 +5401,17 @@ VIEWS.account = {
    ===================================================================== */
 async function exportDonors() {
   if (!guard('export')) return;
-  const { list, stats } = filteredDonors(), pii = showPII();
+  const { list, stats } = filteredDonors(), pii = fullPII();
   downloadCSV(`alkhidmat-donors-${todayISO()}.csv`, ['Donor ID', 'Type', 'Name', 'Father/Contact', 'CNIC', 'NTN', 'Phone', 'Email', 'City', 'Address', 'Preferred', 'Channel', 'Consent', 'Status', 'Verified total (PKR)', 'Gifts', 'Last gift', 'Since'],
-    list.map(d => { const s = stats[d.id] || {}; return [d.id, d.type, d.name, d.father, pii ? d.cnic : maskCNIC(d.cnic), d.ntn, pii ? d.phone : maskPhone(d.phone), pii ? d.email : maskEmail(d.email), d.city, pii ? d.address : '', d.preferred, d.channel, d.consent ? 'Yes' : 'No', d.status, s.total || 0, s.count || 0, s.last || '', d.since]; }));
-  await audit('EXPORT_DONORS', `${list.length} rows`, pii ? 'Includes personal identifiers' : 'Masked identifiers'); persist();
+    list.map(d => { const s = stats[d.id] || {}; return [d.id, d.type, d.name, pii ? d.father : '', pii ? d.cnic : '', pii ? d.ntn : '', pii ? d.phone : '', pii ? d.email : '', d.city, pii ? d.address : '', d.preferred, d.channel, d.consent ? 'Yes' : 'No', d.status, s.total || 0, s.count || 0, s.last || '', d.since]; }));
+  await audit('EXPORT_DONORS', `${list.length} rows`, pii ? 'FULL FILE (approved request)' : 'Names only'); persist();
   toast(`Exported ${list.length} donors.`, 'success');
 }
 async function exportDonations() {
   if (!guard('export')) return;
   const list = filteredDonations();
   downloadCSV(`alkhidmat-donations-${todayISO()}.csv`, ['Receipt', 'Serial', 'Book No.', 'Donation ID', 'Date', 'Donor ID', 'Donor', 'Total (PKR)', 'On account of (lines)', 'Mode', 'Cheque/Draft/Txn #', 'Bank', 'C/O name', 'C/O mobile', 'Status', 'Received by', 'Recorded by', 'Verified by', 'Reason'],
-    list.map(x => [x.receipt, x.serial || '', x.bookNo || '', x.id, x.date, x.donorId, donorName(donorById(x.donorId)), x.amount, linesOf(x).map(l => `${lineText(l)} = ${l.amount}`).join(' | '), x.mode, x.ref, x.bank || '', x.co ? x.co.name : '', x.co && showPII() ? x.co.mobile : '', x.status, x.receivedBy || '', x.createdBy, x.verifiedBy || '', x.reason || '']));
+    list.map(x => [x.receipt, x.serial || '', x.bookNo || '', x.id, x.date, x.donorId, donorName(donorById(x.donorId)), x.amount, linesOf(x).map(l => `${lineText(l)} = ${l.amount}`).join(' | '), x.mode, x.ref, x.bank || '', x.co ? x.co.name : '', x.co && fullPII() ? x.co.mobile : '', x.status, x.receivedBy || '', x.createdBy, x.verifiedBy || '', x.reason || '']));
   await audit('EXPORT_DONATIONS', `${list.length} rows`, ''); persist();
   toast(`Exported ${list.length} donations.`, 'success');
 }
@@ -5362,6 +5495,8 @@ const ACT = {
   'cor-request': t => { closeModal(); setTimeout(() => correctionForm(t.dataset.id), 230); },
   'cor-open': t => { const was = modalOpen(); closeModal(); setTimeout(() => correctionDetail(t.dataset.id), was ? 230 : 0); },
   'cor-approve': t => decideCorrection(t.dataset.id, true),
+  'fin-mode': t => { UI.finance.mode = t.dataset.mode; render(); },
+  'fin-tab': t => { UI.finance = Object.assign(UI.finance || {}, { tab: t.dataset.tab, q: '', mode: '' }); render(); },
   'goods-tab': t => { UI.goods = Object.assign(UI.goods || {}, { tab: t.dataset.tab, q: '' }); if (UI.view !== 'goods') go('goods'); else render(); },
   'store-receive': t => { const x = S.donations.find(d => d.id === t.dataset.id); if (!x) return; const was = modalOpen(); closeModal(); setTimeout(() => storeReceive(x), was ? 230 : 0); },
   'cor-reject': t => decideCorrection(t.dataset.id, false),
@@ -5376,6 +5511,12 @@ const ACT = {
   'imp-errors': () => importErrorsXlsx(),
   'imp-cancel': () => { UI.importAn = null; render(); },
   'exp-donors': () => exportDonorsXlsx(UI.view === 'donors' ? filteredDonors().list : null),
+  'file-reqs': fileReqOpen,
+  'file-ask': async () => { const r = await ask({ title: 'Full donor file: new request', message: `The full file holds every donor's CNIC, mobile, e-mail and address. <b>Approval path:</b> ${FILE_PATH.join(' → ')}.`, ok: 'Send for approval', reason: true, reasonLabel: 'Why is the full file needed?' }); if (r.ok && await fileReqDo('donor_file_ask', { p_reason: r.reason }, 'The request was not sent', 'Sent for approval.')) fileReqOpen(); },
+  'file-ok': t => fileReqDecide(t.dataset.id, true, 'Approve', 'You approve that this person may download the full donor file <b>once</b>.', 'Approve'),
+  'file-no': t => fileReqDecide(t.dataset.id, false, 'Reject', 'The request stops here. The person can send a new request.', 'Reject'),
+  'file-cancel': t => fileReqDecide(t.dataset.id, false, 'Cancel request', 'Your request for the full donor file will be cancelled.', 'Cancel request'),
+  'file-take': t => fileReqTake(t.dataset.id),
   'exp-donations': () => exportDonationsXlsx(($('#exp-from') || {}).value, ($('#exp-to') || {}).value),
   'team-officer': t => { UI.donations = Object.assign(UI.donations, { by: t.dataset.email, status: '', q: '', page: 1, mine: false, goods: false }); go('donations'); },
   'team-move': () => moveDonors(),
@@ -5442,6 +5583,348 @@ $('#top-search').addEventListener('submit', e => { e.preventDefault(); if (!view
 /* =====================================================================
    DEMO DATA
    ===================================================================== */
+/* ================= Cases: One ID, One Story (asked 2026-11-18) =================
+   One case per receipt or pledge. The Case ID is built from that record's own number, so it can never repeat.
+   The case sits BESIDE the receipt (the receipt and its number are not changed). Every step is one status with one owner;
+   the timeline only grows. donor.sql (donor_case_guard) checks the owner of each step again on the server. */
+const CASE_LIMIT = 200000;   // shortcut: the President limit is fixed here and in donor.sql; move it to Settings when it must change without a developer
+const CASE_ST = { rm: 'Waiting for Regional Manager', president: 'Waiting for President', money: 'Waiting for Finance (money received)', dept: 'Waiting for department', work: 'In progress',
+  visit: 'Waiting for RMD site visit', verify: 'Waiting for Regional Manager (verify report)', finance: 'Waiting for Finance (check expenses)', share: 'Donor report to share',
+  closed: 'Completed', back: 'Sent back for correction', rejected: 'Rejected' };
+const CASE_STEPS = [['new', 'Intake'], ['rm', 'Approval'], ['money', 'Money received'], ['dept', 'Accepted'], ['work', 'Execution'], ['visit', 'Site visit'], ['verify', 'Verified'], ['finance', 'Finance check'], ['share', 'Donor report'], ['closed', 'Closed']];
+const CASE_TEMPLATE = { health: ['Buy the medicines or supplies', 'Deliver to the beneficiaries', 'Collect bills and receipts', 'Take photos (with consent)'],
+  wash: ['Survey the site', 'Install the water point', 'Test the water', 'Take photos (with consent)'],
+  edu: ['Confirm the students or school', 'Pay fees or deliver items', 'Collect bills and receipts', 'Take photos (with consent)'],
+  '': ['Plan the activity', 'Deliver to the beneficiaries', 'Collect bills and receipts', 'Take photos (with consent)'] };
+const caseTemplate = p => CASE_TEMPLATE[/health|medical|ambulance|blood|diagnos/i.test(p) ? 'health' : /water|wash/i.test(p) ? 'wash' : /educat|school|student|qabil/i.test(p) ? 'edu' : ''];
+/* the programme on a receipt or pledge picked in the New case form ('D:id' or 'P:id') */
+const caseSrcProg = v => { const o = v[0] === 'D' ? S.donations.find(d => d.id === v.slice(2)) : pledgeById(v.slice(2)); return (((o || {}).lines || [])[0] || {}).program || ''; };
+/* locations in use: the city list, every donor's city and every location typed on an earlier case */
+const caseLocs = () => Array.from(new Set(CITIES.concat(S.donors.map(d => d.city), (S.cases || []).map(c => c.location)).map(x => String(x || '').trim()).filter(Boolean))).sort();
+let CM = { orole: '', dept: '', depts: [['HLT', 'Health Services'], ['EDU', 'Education'], ['ORP', 'Orphan Care'], ['WASH', 'WASH'], ['COM', 'Community Services']], ready: '' };
+/* who am I in the approval path, and the department list (ERP); the demo maps its own roles */
+function caseBoot() {
+  if (!ME || CM.ready === ME.id) return; CM.ready = ME.id; CM.orole = ''; CM.dept = '';   // once per signed-in person
+  if (!ERP) { CM.orole = { rm: 'regional_manager', president: 'president', finance: 'finance' }[ME.role] || ''; return; }
+  Promise.all([erpSb.rpc('donor_caps'), erpSb.from('core_departments').select('code,name').eq('active', true).order('name')]).then(([a, b]) => {
+    if (a.data) { CM.orole = a.data.orole || ''; CM.dept = a.data.dept || ''; }
+    if (b.data && b.data.length) CM.depts = b.data.map(d => [d.code, d.name]);
+    buildChrome(); if (UI.view === 'cases') render();
+  }).catch(() => { CM.ready = ''; });
+}
+const caseSuper = () => !!ME && (ME.isSuper || ME.role === 'super');   // the offline demo marks its Super Admin by role
+const caseById = id => (S.cases || []).find(c => c.id === id);
+const caseSpent = c => (c.expenses || []).reduce((s, e) => s + (+e.amount || 0), 0);
+const caseBudget = c => +(c.plan && c.plan.budget) || +c.amount || 0;
+const caseDept = c => c.deptName || (CM.depts.find(d => d[0] === c.dept) || [0, c.dept || '—'])[1];
+const caseOpenNow = c => !['closed', 'rejected'].includes(c.status);
+/* working hours between two moments. shortcut: Monday to Friday, 09:00 to 17:00, no public holidays; make it a setting when the office hours differ */
+function workHours(from, to) {
+  let a = new Date(from), h = 0; to = to ? new Date(to) : new Date(); if (isNaN(a)) return 0;
+  for (let i = 0; i < 800 && a < to; i++) {
+    const s = new Date(a), e = new Date(a); s.setHours(9, 0, 0, 0); e.setHours(17, 0, 0, 0);
+    if (a.getDay() % 6) { const x = Math.max(a, s), y = Math.min(to, e); if (y > x) h += (y - x) / 36e5; }
+    a = new Date(a); a.setDate(a.getDate() + 1); a.setHours(0, 0, 0, 0);
+  }
+  return h;
+}
+console.assert(workHours('2026-11-16T10:00:00', '2026-11-16T12:00:00') === 2 && workHours('2026-11-13T16:00:00', '2026-11-16T10:00:00') === 2 && workHours('2026-11-14T10:00:00', '2026-11-15T12:00:00') === 0, 'workHours');
+/* 0 fine · 1 reminder (2h) · 2 overdue (4h) · 3 with the Regional Manager (8h) · 4 with Top Management (16h); a Critical case counts four times faster (1 hour limit) */
+function caseLevel(c) {
+  if (!caseOpenNow(c)) return 0;
+  if (c.status === 'work') return c.deadline && c.deadline < todayISO() ? 2 : 0;
+  const h = workHours(c.since || c.createdAt) * (c.priority === 'Critical' ? 4 : 1);
+  return h >= 16 ? 4 : h >= 8 ? 3 : h >= 4 ? 2 : h >= 2 ? 1 : 0;
+}
+const CASE_LVL = ['', 'Reminder', 'Overdue', 'Overdue · with Regional Manager', 'Overdue · with Top Management'];
+/* is the next move mine? Nobody approves their own case; the officer who did the work does not verify it */
+function caseMine(c) {
+  if (!ME || !caseOpenNow(c)) return false;
+  const o = CM.orole, ap = can('case.approve'), own = c.createdBy === ME.email;
+  if (caseSuper()) return !(own && ['rm', 'president', 'verify', 'finance'].includes(c.status));
+  switch (c.status) {
+    case 'back': case 'share': return can('case.create');
+    case 'visit': return can('case.create') && c.officer !== ME.email;
+    case 'rm': case 'verify': return ap && o === 'regional_manager' && !own;
+    case 'president': return ap && o === 'president' && !own;
+    case 'money': case 'finance': return ap && /^finance/.test(o) && !own;
+    case 'dept': return ap && !!CM.dept && CM.dept === c.dept;
+    case 'work': return c.officer === ME.email || (ap && !!CM.dept && CM.dept === c.dept);
+  }
+  return false;
+}
+const caseEscalated = c => caseOpenNow(c) && !caseMine(c) && ((caseLevel(c) >= 3 && CM.orole === 'regional_manager') || (caseLevel(c) >= 4 && ['president', 'gen_sec'].includes(CM.orole)));
+const caseBadge = c => `<span class="badge ${c.status === 'closed' ? 'b-ok' : ['rejected', 'back'].includes(c.status) ? 'b-bad' : 'b-warn'}"><span class="dot"></span>${esc(CASE_ST[c.status] || c.status)}</span>`;
+const caseSrc = c => c.donationId ? S.donations.find(x => x.id === c.donationId) : null;
+const caseMoneyIn = c => { const x = caseSrc(c); if (x) return x.status === 'Verified' ? +c.amount : 0; const p = c.pledgeId && pledgeById(c.pledgeId); return p ? Math.min(+c.amount, pledgeStats(p).paid) : 0; };
+function caseLog(c, action, remarks) { (c.timeline = c.timeline || []).push({ at: new Date().toISOString(), by: ME.email, name: ME.name, step: c.status, action, remarks: String(remarks || '').slice(0, 500) }); }
+async function caseSave(c, action, remarks, next, msg) {
+  caseLog(c, action, remarks);
+  if (next) { c.status = next; c.since = new Date().toISOString(); }
+  await audit('CASE_' + action.toUpperCase().replace(/[^A-Z]+/g, '_'), c.id, remarks || '');
+  await persist(); buildChrome(); render(); caseOpen(c.id); toast(msg || 'Saved.', 'success');
+}
+/* the five numbers to watch */
+function caseNumbers() {
+  const L = S.cases || [], pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+  const acc = L.filter(c => c.acceptH != null), cl = L.filter(c => c.status === 'closed'), rep = cl.filter(c => c.verifiedAt && c.report);
+  const days = cl.map(c => (Date.parse(c.closedAt) - Date.parse((caseSrc(c) || {}).date || c.createdAt)) / 864e5).filter(isFinite);
+  const res = cl.filter(c => c.restricted);
+  const od = dueInstallments().filter(r => r.state === 'Overdue').reduce((s, r) => s + (+r.s.amount || 0), 0);
+  const un = L.filter(c => c.status !== 'rejected').reduce((s, c) => s + Math.max(0, caseMoneyIn(c) - caseSpent(c)), 0);
+  return [['Accepted within the time limit', pct(acc.filter(c => c.acceptH <= (c.priority === 'Critical' ? 1 : 4)).length, acc.length)],
+    ['Average days, collection to closure', days.length ? (days.reduce((a, b) => a + b, 0) / days.length).toFixed(1) : '—'],
+    ['Donor reports within 7 days of verification', pct(rep.filter(c => Date.parse(c.report.at) - Date.parse(c.verifiedAt) <= 7 * 864e5).length, rep.length)],
+    ['Restricted funds used as intended', pct(res.filter(c => c.asIntended !== false).length, res.length)],
+    ['Overdue pledges · unspent balances', compact(od) + ' · ' + compact(un)]];
+}
+VIEWS.cases = {
+  html() {
+    caseBoot();
+    const st = UI.cases, L = S.cases || [], q = st.q.trim().toLowerCase();
+    const mine = L.filter(c => caseMine(c) || caseEscalated(c)), open = L.filter(caseOpenNow), late = open.filter(c => caseLevel(c) >= 2);
+    const rows = L.filter(c => {
+      if (st.f === 'mine' && !(caseMine(c) || caseEscalated(c))) return false;
+      if (st.f === 'open' && !caseOpenNow(c)) return false;
+      if (st.f === 'late' && !(caseOpenNow(c) && caseLevel(c) >= 2)) return false;
+      if (st.f === 'closed' && c.status !== 'closed') return false;
+      if (CASE_ST[st.f] && c.status !== st.f) return false;
+      if (q && ![c.id, donorName(donorById(c.donorId)), c.location, c.fund, c.programme, c.receipt, caseDept(c)].concat((c.bens || []).map(b => b.name + ' ' + b.cnic4)).some(v => String(v || '').toLowerCase().includes(q))) return false;
+      return true;
+    }).sort((a, b) => caseLevel(b) - caseLevel(a) || String(b.createdAt).localeCompare(String(a.createdAt)));
+    const kpi = (f, icon, label, n, sub, warn) => `<button class="kpi kpi-btn ${warn ? 'warn' : ''}" data-act="case-filter" data-f="${f}"><div class="k-ic">${ic(icon)}</div><div class="k-l">${label}</div><div class="k-v num">${n}</div><div class="k-s">${sub}</div></button>`;
+    const items = Object.keys(CASE_ST).map(k => ({ key: k, label: CASE_ST[k], value: L.filter(c => c.status === k).length })).filter(i => i.value);
+    const chart = !items.length ? '' : window.AKF_CHARTS ? AKF_CHARTS.bars({ id: 'case-steps', items })
+      : `<div class="cell-actions" style="justify-content:flex-start;flex-wrap:wrap">${items.map(i => `<button class="btn btn-ghost btn-sm" data-act="case-filter" data-f="${i.key}">${esc(i.label)} · <b>${i.value}</b></button>`).join('')}</div>`;
+    const page = rows.slice((st.page - 1) * PAGE, st.page * PAGE);
+    return `<div class="page-head"><div><h2>Cases: One ID, One Story</h2><p>Each donation is followed under one Case ID, from collection until the donor gets the report.</p></div>
+      <div class="actions">${can('case.create') ? `<button class="btn btn-primary" data-act="case-new">${ic('plus')}New case</button>` : ''}</div></div>
+    <div class="kpis">${kpi('mine', 'bell', 'Waiting for you', mine.length, 'Your next steps', mine.length)}${kpi('open', 'calendar', 'Open cases', open.length, 'All cases in progress')}${kpi('late', 'alert', 'Overdue', late.length, 'Past the time limit', late.length)}${kpi('closed', 'shieldCheck', 'Completed', L.filter(c => c.status === 'closed').length, 'Closed with a donor report')}</div>
+    <div class="card" style="margin-bottom:16px"><h4 class="sec-title" style="margin-top:0">Five numbers to watch</h4><div class="stats-strip" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${caseNumbers().map(([k, v]) => `<div><div class="k">${esc(k)}</div><div class="v num">${esc(v)}</div></div>`).join('')}</div>
+      ${chart ? `<h4 class="sec-title">Cases by step (click a bar to list them)</h4>${chart}` : ''}</div>
+    <div class="card"><div class="toolbar">
+      <div class="grow search-in">${ic('search')}<input class="input" id="case-q" type="search" placeholder="Search Case ID, donor, location, fund, beneficiary or last 4 digits of CNIC…" value="${esc(st.q)}" maxlength="60" aria-label="Search cases"></div>
+      <select class="select" id="case-f" aria-label="Show">${[['mine', 'Waiting for you'], ['open', 'Open cases'], ['late', 'Overdue'], ['closed', 'Completed'], ['', 'All cases']].concat(Object.entries(CASE_ST)).map(([v, l]) => `<option value="${v}" ${v === st.f ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div>
+      ${rows.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Case</th><th>Donor</th><th>Fund · Programme</th><th class="right">Amount</th><th>Department</th><th>Deadline</th><th>Status</th></tr></thead><tbody>
+      ${page.map(c => { const lv = caseLevel(c); return `<tr class="click" data-act="case-view" data-id="${esc(c.id)}" tabindex="0">
+        <td class="mono nowrap">${esc(c.id)}<div class="t-sub">${esc(c.receipt || c.pledgeId || '')}</div></td><td class="t-name">${esc(donorName(donorById(c.donorId)))}</td>
+        <td class="small">${esc(c.fund || '')} · ${esc(c.programme || '')}<div class="t-sub">${esc(c.region || 'Islamabad')}${c.location ? ' · ' + esc(c.location) : ''}${c.restricted ? ' · Restricted' : ''}</div></td>
+        <td class="right num">${esc(money(c.amount))}</td><td class="small">${esc(caseDept(c))}${c.officerName ? `<div class="t-sub">${esc(c.officerName)}</div>` : ''}</td>
+        <td class="nowrap">${c.deadline ? fmtDate(c.deadline) : '—'}${c.priority && c.priority !== 'Normal' ? `<div class="t-sub">${esc(c.priority)}</div>` : ''}</td>
+        <td>${caseBadge(c)}${lv ? ` <span class="badge ${lv > 1 ? 'b-bad' : 'b-warn'}">${esc(CASE_LVL[lv])}</span>` : ''}${caseMine(c) ? ' <span class="badge b-info">Waiting for you</span>' : ''}</td></tr>`; }).join('')}
+      </tbody></table></div>${pager('cases', st.page, rows.length)}` : emptyState('calendar', st.f === 'mine' ? 'Nothing is waiting for you' : 'No cases found', can('case.create') ? 'Press “New case” to start one from a receipt or a pledge.' : 'Cases appear here when one reaches you.')}
+    </div>`;
+  },
+  bind() {
+    $('#case-q').addEventListener('input', debounce(() => { UI.cases.q = $('#case-q').value; UI.cases.page = 1; render(); const i = $('#case-q'); if (i) { i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }, 250));
+    $('#case-f').addEventListener('change', () => { UI.cases.f = $('#case-f').value; UI.cases.page = 1; render(); });
+    const ch = $('#view'); ch.addEventListener('akf-chart-pick', e => { const k = e.detail && e.detail.key; if (CASE_ST[k]) { UI.cases.f = k; UI.cases.page = 1; render(); } });
+  }
+};
+const cf = (id, label, html, req) => `<div class="field"><label for="${id}">${label}${req ? ' <span class="req">*</span>' : ''}</label>${html}</div>`;
+const cOpt = (list, cur) => list.map(v => { const [a, b] = Array.isArray(v) ? v : [v, v]; return `<option value="${esc(a)}" ${a === cur ? 'selected' : ''}>${esc(b)}</option>`; }).join('');
+const cVal = id => { const e = $('#' + id); return e ? String(e.value || '').replace(/[<>`]/g, '').trim() : ''; };
+/* intake: the 60-second form. Amount, donor, fund and programme come from the receipt or pledge, so nothing is typed twice */
+function caseForm(id) {
+  if (!guard('case.create')) return;
+  const c = id ? caseById(id) : null, has = new Set((S.cases || []).map(x => x.donationId || x.pledgeId));
+  const src = c ? [] : S.donations.filter(x => !['Voided', 'Rejected'].includes(x.status) && !x.pledgeId && !has.has(x.id)).slice(-200).reverse().map(x => ['D:' + x.id, `${x.receipt || x.id} · ${donorName(donorById(x.donorId))} · ${money(x.amount)}`])
+    .concat(S.pledges.filter(p => p.status === 'Active' && !has.has(p.id)).map(p => ['P:' + p.id, `${p.id} (pledge) · ${donorName(donorById(p.donorId))} · ${money(p.total)}`]));
+  if (!c && !src.length) { toast('Every receipt and pledge already has a case. Record a new receipt first.', 'warn'); return; }
+  const v = c || { priority: 'Normal', frequency: 'One-Time', purpose: '', src: 'Individual', plan: {}, deadline: addDays(todayISO(), 14) }, pl = v.plan || {};
+  openModal({ title: c ? `Correct case ${c.id}` : 'New case', size: 'lg',
+    body: `<form id="f-case" class="form-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+      ${c ? '' : cf('c-src', 'Receipt or pledge', `<select class="select" id="c-src" autofocus>${cOpt(src)}</select>`, 1)}
+      ${cf('c-type', 'Source type', `<select class="select" id="c-type">${cOpt(['Individual', 'Corporate', 'Institution', 'Online', 'Other'], v.src)}</select>`)}
+      ${cf('c-res', 'Restricted by the donor?', `<select class="select" id="c-res">${cOpt([['', 'No: unrestricted'], ['1', 'Yes: only for this purpose']], v.restricted ? '1' : '')}</select>`)}
+      ${cf('c-purpose', 'Donation purpose', `<select class="select" id="c-purpose">${groupedOptions(PROGRAM_GROUPS, v.purpose || (src[0] ? caseSrcProg(src[0][0]) : '') || PROGRAMS[0])}</select>`, 1)}
+      ${cf('c-freq', 'Donation frequency', `<select class="select" id="c-freq">${cOpt(['One-Time', 'Monthly', 'Quarterly', 'Annual'], v.frequency)}</select>`)}
+      ${cf('c-wo', 'W.O. No', `<input class="input" id="c-wo" maxlength="30" value="${esc(v.wo || '')}">`)}
+      ${cf('c-ref', 'Reference (C/O)', `<input class="input" id="c-ref" maxlength="60" value="${esc(v.ref || '')}">`)}
+      ${cf('c-loc', 'Location', `<input class="input" id="c-loc" maxlength="60" list="c-loc-l" value="${esc(v.location || '')}" placeholder="Pick or type another"><datalist id="c-loc-l">${caseLocs().map(x => `<option value="${esc(x)}">`).join('')}</datalist>`, 1)}
+      ${cf('c-dept', 'Executing department', `<select class="select" id="c-dept">${cOpt(CM.depts.concat([['other', 'Other']]), v.dept)}</select>`, 1)}
+      <div id="c-deptx-w" ${v.dept === 'other' ? '' : 'hidden'}>${cf('c-deptx', 'Which department', `<input class="input" id="c-deptx" maxlength="60" value="${esc(v.dept === 'other' ? v.deptName || '' : '')}">`, 1)}</div>
+      ${cf('c-dead', 'Deadline', `<input class="input" id="c-dead" type="date" min="${todayISO()}" value="${esc(v.deadline || '')}">`, 1)}
+      ${cf('c-pri', 'Priority', `<select class="select" id="c-pri">${cOpt(['Normal', 'High', 'Critical'], v.priority)}</select>`)}
+      ${cf('c-budget', 'Budget allocated (PKR). Empty = the full amount', `<input class="input" id="c-budget" inputmode="numeric" maxlength="12" value="${esc(pl.budget || '')}">`)}
+      ${cf('c-dtype', 'Disbursement type', `<select class="select" id="c-dtype">${cOpt(['Cash', 'In-Kind'], pl.type)}</select>`)}
+      ${cf('c-pdate', 'Planned date', `<input class="input" id="c-pdate" type="date" value="${esc(pl.date || '')}">`)}
+      ${cf('c-pben', 'Planned number of beneficiaries', `<input class="input" id="c-pben" inputmode="numeric" maxlength="6" value="${esc(pl.bens || '')}">`)}
+      <div style="grid-column:1/-1">${cf('c-what', 'What to do', `<textarea class="textarea" id="c-what" maxlength="600" rows="2">${esc(v.what || '')}</textarea>`, 1)}</div>
+      <div style="grid-column:1/-1">${cf('c-tasks', 'Tasks, one per line (empty = the usual checklist for this purpose). A big donation can have several: T1, T2, T3', `<textarea class="textarea" id="c-tasks" maxlength="900" rows="3">${esc((v.tasks || []).map(t => t.title).join('\n'))}</textarea>`)}</div>
+    </form>`,
+    foot: `<button class="btn btn-ghost" data-act="modal-close">Cancel</button><button class="btn btn-primary" data-act="case-save" data-id="${esc(id || '')}">${ic('send')}Send for approval</button>` });
+  $('#c-dept').addEventListener('change', () => { $('#c-deptx-w').hidden = $('#c-dept').value !== 'other'; });   // the box shows only for Other
+  if ($('#c-src')) $('#c-src').addEventListener('change', () => { const p = caseSrcProg($('#c-src').value); if (PROGRAMS.includes(p)) $('#c-purpose').value = p; });   // the purpose follows the receipt
+}
+async function caseSubmit(id) {
+  if (!guard('case.create')) return;
+  let c = id ? caseById(id) : null;
+  const need = [['c-loc', 'the location'], ['c-what', 'what to do'], ['c-dead', 'the deadline']].find(([k]) => !cVal(k));
+  if (need) { toast('Please fill ' + need[1] + '.', 'error'); $('#' + need[0]).focus(); return; }
+  if (cVal('c-dept') === 'other' && !cVal('c-deptx')) { toast('Please fill the department.', 'error'); return; }
+  if (!c) {
+    const [k, sid] = [cVal('c-src')[0], cVal('c-src').slice(2)], x = k === 'D' ? S.donations.find(d => d.id === sid) : null, p = k === 'P' ? pledgeById(sid) : null, o = x || p;
+    if (!o || (S.cases || []).some(z => z.donationId === sid || z.pledgeId === sid)) { toast('This receipt already has a case.', 'error'); return; }
+    const m = /(\d{4})-0*(\d+)$/.exec(o.id) || [0, todayISO().slice(0, 4), Date.now() % 1e6], line = (o.lines || [])[0] || {};
+    c = { id: `RM-${m[1]}-${p ? 'P' : ''}${pad(m[2], 4)}`, donationId: x ? x.id : '', pledgeId: p ? p.id : '', receipt: x ? x.receipt || '' : '', donorId: o.donorId, amount: +(x ? x.amount : p.total) || 0,
+      fund: line.category || '', programme: line.program || '', region: 'Islamabad', mode: (x && x.mode) || (p && p.mode) || '', createdBy: ME.email, createdAt: new Date().toISOString(),
+      status: 'new', expenses: [], bens: [], complaints: [], timeline: [] };
+    if (caseById(c.id)) { toast('This Case ID already exists.', 'error'); return; }
+    (S.cases = S.cases || []).push(c);
+  }
+  const tasks = cVal('c-tasks').split('\n').map(s => s.trim()).filter(Boolean).slice(0, 12), purpose = cVal('c-purpose'), b = +cVal('c-budget').replace(/\D/g, '') || 0;
+  if (b > c.amount) { toast('The budget cannot be more than the donation.', 'error'); if (!id) S.cases.pop(); return; }
+  Object.assign(c, { src: cVal('c-type'), restricted: !!cVal('c-res') || c.fund === 'Zakat', purpose, frequency: cVal('c-freq'), wo: cVal('c-wo'), ref: cVal('c-ref'), location: cVal('c-loc'),
+    dept: cVal('c-dept'), deptName: cVal('c-dept') === 'other' ? cVal('c-deptx') : '', deadline: cVal('c-dead'), priority: cVal('c-pri'), what: cVal('c-what'),
+    plan: { budget: b || c.amount, type: cVal('c-dtype'), date: cVal('c-pdate'), bens: +cVal('c-pben').replace(/\D/g, '') || 0 },
+    tasks: (tasks.length ? tasks : caseTemplate(purpose)).map((t, i) => { const old = (c.tasks || [])[i]; return { id: 'T' + (i + 1), title: t.slice(0, 120), done: !!(old && old.title === t && old.done) }; }) });
+  closeModal();
+  await caseSave(c, id ? 'Corrected and resubmitted' : 'Case created', c.what, 'rm', `Case ${c.id} sent to the Regional Manager.`);
+}
+/* the case window: everything under the one ID */
+function caseOpen(id) {
+  const c = caseById(id); if (!c) return;
+  const d = donorById(c.donorId), mine = caseMine(c), spent = caseSpent(c), inn = caseMoneyIn(c), lv = caseLevel(c), work = c.status === 'work' && mine;
+  const at = CASE_STEPS.findIndex(s => s[0] === (c.status === 'president' ? 'rm' : c.status)), pos = c.status === 'back' || c.status === 'rejected' ? 0 : at;
+  const steps = `<ol style="display:flex;gap:4px;list-style:none;padding:0;margin:14px 0;overflow:auto">${CASE_STEPS.map(([k, l], i) => `<li style="flex:1;min-width:64px;text-align:center;font-size:11.5px;color:var(--text-2)"><div style="height:6px;border-radius:4px;margin-bottom:5px;background:${i < pos || c.status === 'closed' ? 'var(--ok,#1E9A5A)' : i === pos ? 'var(--brand-600,#0B4A9F)' : 'var(--line,#E2E8F0)'}"></div>${i + 1}. ${esc(l)}</li>`).join('')}</ol>`;
+  const btn = (act, label, cls, extra) => `<button class="btn ${cls || 'btn-ghost'}" data-act="${act}" data-id="${esc(c.id)}" ${extra || ''}>${label}</button>`;
+  let act = '';
+  if (mine) {
+    const s = c.status, big = c.amount > CASE_LIMIT;
+    if (s === 'rm') act = btn('case-do', big ? 'Recommend to President' : 'Approve', 'btn-success', 'data-do="approve"') + btn('case-do', 'Send back', '', 'data-do="back"') + btn('case-do', 'Reject', '', 'data-do="reject" style="color:var(--danger)"');
+    if (s === 'president') act = btn('case-do', 'Approve', 'btn-success', 'data-do="approve"') + btn('case-do', 'Send back', '', 'data-do="back"') + btn('case-do', 'Reject', '', 'data-do="reject" style="color:var(--danger)"');
+    if (s === 'money') act = btn('case-do', 'Confirm money received', 'btn-success', 'data-do="money"');
+    if (s === 'back') act = btn('case-edit', 'Correct and resubmit', 'btn-primary');
+    if (s === 'dept') act = `<select class="select" id="ca-off" aria-label="Officer" style="max-width:240px"><option value="">Assign an officer…</option>${Object.values(S.users || {}).filter(u => !u.disabled).map(u => `<option value="${esc(u.email)}">${esc(u.name)}</option>`).join('')}</select>` + btn('case-do', 'Accept and assign', 'btn-success', 'data-do="accept"') + btn('case-do', 'Ask a question', '', 'data-do="ask"') + btn('case-do', 'Reject', '', 'data-do="back" style="color:var(--danger)"');
+    if (s === 'visit') act = `<select class="select" id="ca-visit" aria-label="Site visit" style="max-width:220px">${cOpt([['Yes', 'Site visit conducted'], ['No', 'No site visit']])}</select>` + btn('case-do', 'Satisfactory: send to Regional Manager', 'btn-success', 'data-do="visit"') + btn('case-do', 'Not satisfactory: return to officer', '', 'data-do="return"');
+    if (s === 'verify') act = btn('case-do', 'Verify report', 'btn-success', 'data-do="verify"') + btn('case-do', 'Return to officer', '', 'data-do="return"');
+    if (s === 'finance') act = btn('case-do', 'Expenses checked', 'btn-success', 'data-do="finance"') + btn('case-do', 'Return to officer', '', 'data-do="return"');
+    if (s === 'share') act = `<select class="select" id="ca-type" aria-label="Report type" style="max-width:170px">${cOpt(['Written Report', 'Photos', 'Video', 'All'])}</select><select class="select" id="ca-via" aria-label="Shared via" style="max-width:150px">${cOpt(['WhatsApp', 'Email', 'Hard Copy'])}</select>${c.restricted ? `<select class="select" id="ca-int" aria-label="Used as intended" style="max-width:210px">${cOpt([['1', 'Spent as the donor intended'], ['', 'Not as intended']])}</select>` : ''}` + btn('case-do', 'Report shared: close the case', 'btn-success', 'data-do="close"');
+  }
+  const inp = (i, ph, w, more) => `<input class="input" id="${i}" placeholder="${ph}" aria-label="${ph}" style="max-width:${w}px" ${more || 'maxlength="80"'}>`;
+  const exp = c.expenses || [], bens = c.bens || [], cmp = c.complaints || [];
+  const zak = c.fund === 'Zakat';
+  openModal({ title: `Case ${c.id}`, size: 'lg',
+    body: `<div class="d-head"><span class="avatar">${esc(initials(donorName(d)))}</span><div><h3>${esc(donorName(d))}</h3><div class="muted small">${esc(c.fund || '')} · ${esc(c.programme || '')} · ${esc(c.region || 'Islamabad')}${c.location ? ' · ' + esc(c.location) : ''} · ${esc(c.purpose || '')}${c.restricted ? ' · Restricted' : ''}</div><div class="muted small">${c.receipt ? 'Receipt ' + esc(c.receipt) : 'Pledge ' + esc(c.pledgeId)}${c.wo ? ' · W.O. ' + esc(c.wo) : ''}${c.ref ? ' · C/O ' + esc(c.ref) : ''} · ${esc(c.frequency || '')} · ${esc(c.mode || '')}</div></div><div style="margin-left:auto;text-align:right">${caseBadge(c)}${lv ? `<div style="margin-top:4px"><span class="badge ${lv > 1 ? 'b-bad' : 'b-warn'}">${esc(CASE_LVL[lv])}</span></div>` : ''}</div></div>
+      ${steps}
+      <div class="stats-strip"><div><div class="k">Donation</div><div class="v num">${esc(compact(c.amount))}</div></div><div><div class="k">Received</div><div class="v num">${esc(compact(inn))}</div></div><div><div class="k">Spent of ${esc(compact(caseBudget(c)))}</div><div class="v num">${esc(compact(spent))}</div></div><div><div class="k">Remaining</div><div class="v num">${esc(compact(Math.max(0, inn - spent)))}</div></div></div>
+      ${inn < c.amount && !['closed', 'rejected'].includes(c.status) ? `<div class="alert alert-info">${ic('wallet')}<span>A pledge is not money. The work stays locked until Finance confirms the money is received${c.receipt ? ' (the receipt is verified)' : ''}.</span></div>` : ''}
+      <p style="margin:6px 0"><b>What to do:</b> ${esc(c.what || '')}</p>
+      <p class="hint">Department: <b>${esc(caseDept(c))}</b>${c.officerName ? ' · Officer: <b>' + esc(c.officerName) + '</b>' : ''} · Deadline ${c.deadline ? fmtDate(c.deadline) : '—'} · ${esc(c.priority || 'Normal')}${c.plan && c.plan.bens ? ' · planned beneficiaries ' + esc(c.plan.bens) : ''}${c.plan && c.plan.date ? ' · planned ' + fmtDate(c.plan.date) : ''}</p>
+      ${act ? `<div class="alert alert-info" style="display:block"><b>Waiting for you.</b> Remarks are asked when you press a button.<div class="cell-actions" style="justify-content:flex-start;flex-wrap:wrap;margin-top:8px">${act}</div></div>` : ''}
+      <h4 class="sec-title">Tasks (${(c.tasks || []).filter(t => t.done).length}/${(c.tasks || []).length})</h4>
+      ${(c.tasks || []).map(t => `<label style="display:flex;gap:8px;align-items:center;padding:3px 0"><input type="checkbox" data-act="case-task" data-id="${esc(c.id)}" data-t="${esc(t.id)}" ${t.done ? 'checked' : ''} ${work ? '' : 'disabled'}><span><b>${esc(t.id)}</b> ${esc(t.title)}</span></label>`).join('')}
+      <h4 class="sec-title">Expenses (${exp.length})</h4>
+      ${exp.length ? `<div class="tbl-wrap"><table class="tbl compact"><thead><tr><th>Date</th><th>For</th><th>Bill</th><th class="right">Amount</th><th>By</th></tr></thead><tbody>${exp.map(e => `<tr><td class="nowrap">${fmtDate(e.at)}</td><td>${esc(e.what)}</td><td>${e.file ? `<button class="btn btn-ghost btn-sm" data-act="case-file" data-path="${esc(e.file)}">${esc(e.bill || 'Open bill')}</button>` : esc(e.bill || '')}</td><td class="right num">${esc(money(e.amount))}</td><td class="small">${esc(e.name || '')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">No expense recorded yet.</p>'}
+      ${work ? `<div class="cell-actions" style="justify-content:flex-start;flex-wrap:wrap;margin-top:8px">${inp('cx-what', 'What was bought or paid', 220)}${inp('cx-amt', 'Amount (PKR)', 130, 'inputmode="numeric" maxlength="12"')}${inp('cx-bill', 'Bill number', 130, 'maxlength="30"')}<input type="file" id="cx-file" accept="image/jpeg,image/png,image/webp,application/pdf" aria-label="Bill photo" style="max-width:210px">${btn('case-exp', 'Add expense', 'btn-primary btn-sm')}</div><p class="hint">Each expense needs a bill photo. Spending above the budget is blocked until the Regional Manager raises it.</p>` : ''}
+      <h4 class="sec-title">Beneficiaries (${bens.length})</h4>
+      ${bens.length ? `<div class="tbl-wrap"><table class="tbl compact"><thead><tr><th>Name</th><th>Father's name</th><th>CNIC / B-Form</th><th>Contact</th><th>Address</th>${zak ? '<th>Zakat eligible</th>' : ''}<th>Photo consent</th></tr></thead><tbody>${bens.map(b => `<tr><td>${esc(b.name)}</td><td>${esc(b.father)}</td><td class="mono">•••••-•••••${esc(b.cnic4 || '')}</td><td>${esc(b.contact || '')}</td><td class="small">${esc(b.address || '')}</td>${zak ? `<td>${b.eligible ? 'Yes' : 'No'}</td>` : ''}<td>${b.consent ? 'Yes' : 'No'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">No beneficiary recorded yet.</p>'}
+      ${work ? `<div class="cell-actions" style="justify-content:flex-start;flex-wrap:wrap;margin-top:8px">${inp('cb-name', 'Name', 150)}${inp('cb-father', "Father's name", 150)}${inp('cb-cnic', 'CNIC or B-Form (13 digits)', 190, 'inputmode="numeric" maxlength="15"')}${inp('cb-contact', 'Contact number', 140, 'inputmode="tel" maxlength="15"')}${inp('cb-addr', 'Address', 220, 'maxlength="120"')}${zak ? '<label class="small"><input type="checkbox" id="cb-elig"> Zakat eligibility checked</label>' : ''}<label class="small"><input type="checkbox" id="cb-consent"> Photo consent (guardian for a child)</label>${btn('case-ben', 'Add beneficiary', 'btn-primary btn-sm')}</div><p class="hint">Only the last 4 digits of the CNIC are kept on screen; the full number is kept as a code that is used only to warn about duplicates.</p>
+        <h4 class="sec-title">Disbursement and report</h4><div class="cell-actions" style="justify-content:flex-start;flex-wrap:wrap">${inp('cd-date', 'Disbursement date', 170, `type="date" max="${todayISO()}" value="${esc((c.disb || {}).date || '')}"`)}${inp('cd-amt', 'Amount disbursed (PKR)', 180, `inputmode="numeric" maxlength="12" value="${esc((c.disb || {}).amount || '')}"`)}${inp('cd-items', 'Items delivered (in-kind)', 240, `maxlength="200" value="${esc((c.disb || {}).items || '')}"`)}${btn('case-do', 'Submit report to RMD', 'btn-success', 'data-do="submit"')}${btn('case-do', 'Report a blocker', '', 'data-do="blocker"')}</div>` : c.disb ? `<p class="hint">Disbursed ${fmtDate(c.disb.date)} · ${esc(money(c.disb.amount))}${c.disb.items ? ' · ' + esc(c.disb.items) : ''}</p>` : ''}
+      ${c.visit ? `<p class="hint">Site visit: ${esc(c.visit.done)} · ${esc(c.visit.result)} · verified by ${esc(c.visit.name)} on ${fmtDate(c.visit.at)}</p>` : ''}
+      ${c.report ? `<p class="hint">Donor report: ${esc(c.report.type)} shared via ${esc(c.report.via)} by ${esc(c.report.name)} on ${fmtDate(c.report.at)}${c.report.feedback ? ' · Donor feedback: ' + esc(c.report.feedback) : ''}</p>` : ''}
+      <h4 class="sec-title">Complaints (${cmp.filter(x => x.open).length} open)</h4>
+      ${cmp.map(x => `<p class="hint">${x.open ? '<span class="badge b-bad">Open</span>' : '<span class="badge b-ok">Closed</span>'} ${fmtDate(x.at)} · ${esc(x.text)}${x.note ? ' · ' + esc(x.note) : ''} ${x.open && (can('case.create') || caseSuper()) ? btn('case-do', 'Close complaint', 'btn-ghost btn-sm', `data-do="cclose" data-c="${esc(x.id)}"`) : ''}</p>`).join('')}
+      <h4 class="sec-title">Timeline (nothing here can be edited or deleted; a correction is a new entry)</h4>
+      <ul class="timeline">${(c.timeline || []).slice().reverse().map(t => `<li><span class="badge tl-ic">${ic('audit')}</span><span><b>${esc(t.action)}</b> · ${esc(t.name || t.by)} · ${fmtDT(t.at)}${t.remarks ? `<div class="muted small">${esc(t.remarks)}</div>` : ''}</span></li>`).join('')}</ul>`,
+    foot: `${caseOpenNow(c) ? btn('case-do', 'Record a complaint', 'btn-ghost left', 'data-do="complaint"') : ''}${caseOpenNow(c) && ['dept', 'work'].includes(c.status) && (can('case.create') || CM.orole === 'regional_manager' || caseSuper()) ? btn('case-do', 'Re-assign', '', 'data-do="reassign"') : ''}${caseOpenNow(c) && (CM.orole === 'regional_manager' || caseSuper()) ? btn('case-do', 'Extend deadline / budget', '', 'data-do="extend"') : ''}${['visit', 'verify', 'finance', 'share', 'closed'].includes(c.status) ? btn('case-rep', 'Execution Report', '', 'data-kind="exec"') : ''}${['share', 'closed'].includes(c.status) && (can('case.create') || can('case.work') || caseSuper()) ? btn('case-rep', 'Donor Report', '', 'data-kind="donor"') : ''}<button class="btn btn-ghost" data-act="modal-close">Close</button>` });
+}
+async function caseUpload(c, input) {
+  const f = input && input.files && input.files[0]; if (!f) return '';
+  if (f.size > 5e6 || !/^(image\/(jpeg|png|webp)|application\/pdf)$/.test(f.type)) throw new Error('Attach a photo or PDF of at most 5 MB.');
+  if (!ERP) return f.name.replace(/[^\w. -]/g, '').slice(0, 60);   // the offline demo keeps only the file name
+  const path = `${c.id}/${Date.now().toString(36)}${hex(rand(3))}.${f.type === 'application/pdf' ? 'pdf' : f.type.split('/')[1]}`;
+  const { error } = await erpSb.storage.from('case-files').upload(path, f, { contentType: f.type });
+  if (error) throw new Error(erpErr(error, 'The file could not be uploaded'));
+  return path;
+}
+async function caseDo(c, what, t) {
+  if (!c) return;
+  const own = what === 'complaint' || what === 'cclose' || what === 'reassign' || what === 'extend';
+  if (!own && !caseMine(c)) { toast('This case is not waiting for you.', 'error'); return; }
+  const say = async (title, label) => { const r = await ask({ title, message: `Case <b>${esc(c.id)}</b>`, ok: title, reason: true, reasonLabel: label || 'Remarks' }); return r.ok ? r.reason : null; };
+  const s = c.status, next0 = caseMoneyIn(c) >= c.amount ? 'dept' : 'money';
+  let r;
+  if (what === 'approve') { const up = s === 'rm' && c.amount > CASE_LIMIT; if ((r = await say(up ? 'Recommend to President' : 'Approve')) == null) return;
+    return caseSave(c, up ? 'Recommended' : 'Approved', r, up ? 'president' : next0, up ? 'Sent to the President.' : next0 === 'dept' ? 'Approved. The department has been told.' : 'Approved. Waiting for Finance to confirm the money.'); }
+  if (what === 'back') { if ((r = await say(s === 'dept' ? 'Reject' : 'Send back', 'Reason')) == null) return; return caseSave(c, s === 'dept' ? 'Rejected by the department' : 'Sent back', r, 'back', 'Sent back to RMD.'); }
+  if (what === 'reject') { if ((r = await say('Reject', 'Reason')) == null) return; return caseSave(c, 'Rejected', r, 'rejected', 'Case rejected.'); }
+  if (what === 'money') { if (caseMoneyIn(c) < c.amount) { toast(c.receipt ? 'Verify the receipt in Donations first. The case opens when the money is verified.' : 'The pledge is not fully paid yet. Work stays locked until the money is received.', 'warn'); return; }
+    if ((r = await say('Confirm money received')) == null) return; return caseSave(c, 'Money received', r, 'dept', 'Money confirmed. The department has been told.'); }
+  if (what === 'accept') { const em = cVal('ca-off'), u = Object.values(S.users || {}).find(x => x.email === em); if (!u) { toast('Please choose the officer.', 'error'); return; }
+    if ((r = await say('Accept and assign')) == null) return; c.acceptH = Math.round(workHours(c.since) * 10) / 10; c.officer = u.email; c.officerName = u.name; return caseSave(c, 'Accepted · officer ' + u.name, r, 'work', 'Accepted and assigned.'); }
+  if (what === 'ask') { if ((r = await say('Ask a question', 'Question')) == null) return; return caseSave(c, 'Question', r, '', 'Question saved in the case.'); }
+  if (what === 'blocker') { if ((r = await say('Report a blocker', 'What is blocking the work')) == null) return; return caseSave(c, 'Blocker', r, '', 'Blocker reported.'); }
+  if (what === 'submit') {
+    if ((c.tasks || []).some(x => !x.done)) { toast('Tick every task first, or report a blocker.', 'error'); return; }
+    if (!cVal('cd-date')) { toast('Please fill the disbursement date.', 'error'); return; }
+    if (!(c.expenses || []).length && !cVal('cd-items')) { toast('Record the expenses, or the items delivered.', 'error'); return; }
+    if (!(c.bens || []).length) { toast('Record at least one beneficiary.', 'error'); return; }
+    if (c.fund === 'Zakat' && c.bens.some(b => !b.eligible)) { toast('Zakat: every beneficiary needs the eligibility check.', 'error'); return; }
+    const disb = { date: cVal('cd-date'), amount: +cVal('cd-amt').replace(/\D/g, '') || caseSpent(c), items: cVal('cd-items') };
+    if ((r = await say('Submit report to RMD')) == null) return; c.disb = disb; c.submittedAt = new Date().toISOString(); return caseSave(c, 'Report submitted', r, 'visit', 'Report sent to RMD.'); }
+  if (what === 'visit') { const done = cVal('ca-visit'); if ((r = await say('Site visit: satisfactory')) == null) return; c.visit = { done, result: 'Satisfactory', by: ME.email, name: ME.name, at: new Date().toISOString(), remarks: r }; return caseSave(c, 'Site visit · Satisfactory', r, 'verify', 'Sent to the Regional Manager.'); }
+  if (what === 'return') { if ((r = await say('Return to officer', 'What must be corrected')) == null) return; return caseSave(c, 'Report returned', r, 'work', 'Returned to the officer.'); }
+  if (what === 'verify') { if ((r = await say('Verify report')) == null) return; c.verifiedAt = new Date().toISOString(); return caseSave(c, 'Report verified', r, 'finance', 'Verified. Sent to Finance.'); }
+  if (what === 'finance') { if ((r = await say('Expenses checked')) == null) return; return caseSave(c, 'Expenses checked', r, 'share', 'Checked. RMD can share the Donor Report.'); }
+  if (what === 'close') { if ((c.complaints || []).some(x => x.open)) { toast('A case cannot close with an open complaint.', 'error'); return; }
+    const type = cVal('ca-type'), via = cVal('ca-via'), int = $('#ca-int') ? !!cVal('ca-int') : true; if ((r = await say('Report shared: close the case', 'Donor feedback')) == null) return;
+    const left = Math.max(0, caseMoneyIn(c) - caseSpent(c));
+    c.report = { type, via, by: ME.email, name: ME.name, at: new Date().toISOString(), feedback: r }; c.asIntended = int; c.closedAt = c.report.at;
+    if (left) caseLog(c, 'Unspent ' + money(left), c.fund === 'Zakat' ? 'Stays in the zakat fund' : c.restricted ? 'Stays in its project unless the donor agrees to a change' : 'Goes to the general fund');
+    return caseSave(c, 'Donor report shared · case closed', r, 'closed', 'Case closed.'); }
+  if (what === 'complaint') { if ((r = await say('Record a complaint', 'Complaint')) == null) return; (c.complaints = c.complaints || []).push({ id: 'C' + Date.now().toString(36), at: new Date().toISOString(), text: r, open: true }); return caseSave(c, 'Complaint recorded', r, '', 'Complaint recorded.'); }
+  if (what === 'cclose') { const x = (c.complaints || []).find(k => k.id === t.dataset.c); if (!x || (r = await say('Close complaint', 'How it was resolved')) == null) return; x.open = false; x.note = r; x.closedAt = new Date().toISOString(); return caseSave(c, 'Complaint closed', r, '', 'Complaint closed.'); }
+  if (what === 'reassign') { if ((r = await say('Re-assign', 'Reason')) == null) return; c.officer = ''; c.officerName = ''; return caseSave(c, 'Re-assigned', r, 'dept', 'Sent back to the department to accept and assign.'); }
+  if (what === 'extend') { const a = await ask({ title: 'Extend deadline / budget', message: `Case <b>${esc(c.id)}</b>. Leave a box empty to keep it.<div class="field" style="margin-top:10px"><label for="ce-d">New deadline</label><input class="input" id="ce-d" type="date" min="${todayISO()}"></div><div class="field"><label for="ce-b">New budget (PKR, at most ${esc(money(c.amount))})</label><input class="input" id="ce-b" inputmode="numeric" maxlength="12"></div>`, ok: 'Save', reason: true });
+    if (!a.ok) return; const dl = cVal('ce-d'), b = +cVal('ce-b').replace(/\D/g, '') || 0; if (b > c.amount) { toast('The budget cannot be more than the donation.', 'error'); return; }
+    if (dl) c.deadline = dl; if (b) c.plan = Object.assign({}, c.plan, { budget: b }); return caseSave(c, 'Extended' + (dl ? ' · deadline ' + dl : '') + (b ? ' · budget ' + money(b) : ''), a.reason, '', 'Saved.'); }
+}
+const urdu = { title: 'عطیہ دہندہ رپورٹ', thanks: 'آپ کے عطیے کا شکریہ۔ یہ رپورٹ بتاتی ہے کہ آپ کا عطیہ کیسے خرچ ہوا۔', fund: 'فنڈ', prog: 'پروگرام', amount: 'رقم', spent: 'خرچ', people: 'مستفید افراد' };
+/* one tap, two reports. The Donor Report carries NO personal data of beneficiaries (only how many) */
+function caseReportHTML(c, kind) {
+  const d = donorById(c.donorId), row = (k, v) => `<tr><td style="padding:4px 12px 4px 0;color:#555">${k}</td><td style="padding:4px 0"><b>${v}</b></td></tr>`;
+  const head = `<h2 style="margin:0">${esc(S.org.name)}</h2><p style="margin:2px 0 14px">${kind === 'donor' ? 'Donor Report' : 'Execution Report (internal)'} · Case ${esc(c.id)}</p>`;
+  const base = row('Fund', esc(c.fund || '')) + row('Programme', esc(c.programme || '')) + row('Region · location', esc((c.region || 'Islamabad') + (c.location ? ' · ' + c.location : ''))) + row('Donation', esc(money(c.amount))) + row('Spent', esc(money(caseSpent(c)))) + row('Beneficiaries', esc((c.bens || []).length)) + row('Completed on', c.disb ? fmtDate(c.disb.date) : '—');
+  if (kind === 'donor') return `<div style="font-family:serif;padding:24px">${head}<p>Dear ${esc(donorName(d))}, JazakAllah Khair. This is how your donation was used.</p><table>${base}${c.disb && c.disb.items ? row('Items delivered', esc(c.disb.items)) : ''}</table><p>${esc(c.what || '')}</p>
+    <div dir="rtl" lang="ur" style="margin-top:18px;border-top:1px solid #ccc;padding-top:12px"><h3 style="margin:0">${urdu.title} · ${esc(c.id)}</h3><p>${urdu.thanks}</p><p>${urdu.fund}: ${esc(c.fund || '')} · ${urdu.prog}: ${esc(c.programme || '')}</p><p>${urdu.amount}: ${esc(money(c.amount))} · ${urdu.spent}: ${esc(money(caseSpent(c)))} · ${urdu.people}: ${esc((c.bens || []).length)}</p></div>
+    <p style="margin-top:18px;color:#555;font-size:12px">Complaints or questions: contact Alkhidmat Foundation Islamabad and quote Case ${esc(c.id)}. Verified by ${esc((c.visit || {}).name || '')}.</p></div>`;
+  return `<div style="font-family:serif;padding:24px">${head}<table>${row('Donor', esc(donorName(d)))}${base}${row('Department · officer', esc(caseDept(c) + ' · ' + (c.officerName || '')))}${row('Site visit', esc(c.visit ? c.visit.done + ' · ' + c.visit.result + ' · ' + c.visit.name : '—'))}</table>
+    <h4>Tasks</h4><ul>${(c.tasks || []).map(t => `<li>${t.done ? '☑' : '☐'} ${esc(t.id)} ${esc(t.title)}</li>`).join('')}</ul>
+    <h4>Expenses</h4><table>${(c.expenses || []).map(e => `<tr><td style="padding-right:12px">${fmtDate(e.at)}</td><td style="padding-right:12px">${esc(e.what)}</td><td style="padding-right:12px">${esc(e.bill || '')}</td><td>${esc(money(e.amount))}</td></tr>`).join('')}</table>
+    <h4>Beneficiaries</h4><table>${(c.bens || []).map(b => `<tr><td style="padding-right:12px">${esc(b.name)}</td><td style="padding-right:12px">s/d/o ${esc(b.father)}</td><td>CNIC ending ${esc(b.cnic4 || '')}</td></tr>`).join('')}</table>
+    <h4>Timeline</h4><ul>${(c.timeline || []).map(t => `<li>${fmtDT(t.at)} · ${esc(t.action)} · ${esc(t.name || t.by)}</li>`).join('')}</ul></div>`;
+}
+Object.assign(ACT, {
+  'case-new': () => caseForm(''), 'case-edit': t => caseForm(t.dataset.id), 'case-save': t => caseSubmit(t.dataset.id), 'case-view': t => caseOpen(t.dataset.id),
+  'case-filter': t => { UI.cases.f = t.dataset.f; UI.cases.page = 1; render(); },
+  'case-do': t => caseDo(caseById(t.dataset.id), t.dataset.do, t),
+  'case-task': async t => { const c = caseById(t.dataset.id), k = c && (c.tasks || []).find(x => x.id === t.dataset.t); if (!k || c.status !== 'work' || !caseMine(c)) return; k.done = !!t.checked; await caseSave(c, (k.done ? 'Done: ' : 'Reopened: ') + k.id + ' ' + k.title, '', '', 'Saved.'); },
+  'case-exp': async t => { const c = caseById(t.dataset.id); if (!c || c.status !== 'work' || !caseMine(c)) return;
+    const what = cVal('cx-what'), amt = +cVal('cx-amt').replace(/\D/g, '') || 0, bill = cVal('cx-bill'), fi = $('#cx-file');
+    if (!what || !amt) { toast('Please fill what was paid and the amount.', 'error'); return; }
+    if (!(fi && fi.files && fi.files[0])) { toast('Each expense needs a bill photo.', 'error'); return; }
+    if (caseSpent(c) + amt > caseBudget(c)) { toast(`This is above the budget of ${money(caseBudget(c))}. Ask the Regional Manager to raise the budget first.`, 'error'); return; }
+    busy(t, true, 'Saving…'); let file; try { file = await caseUpload(c, fi); } finally { busy(t, false); }
+    (c.expenses = c.expenses || []).push({ id: 'E' + Date.now().toString(36), at: new Date().toISOString(), by: ME.email, name: ME.name, what: what.slice(0, 80), amount: amt, bill: bill.slice(0, 30), file });
+    await caseSave(c, 'Expense ' + money(amt), what, '', 'Expense recorded.'); },
+  'case-ben': async t => { const c = caseById(t.dataset.id); if (!c || c.status !== 'work' || !caseMine(c)) return;
+    const name = cVal('cb-name'), father = cVal('cb-father'), cn = cVal('cb-cnic').replace(/\D/g, '');
+    if (!name || !father) { toast("Please fill the name and father's name.", 'error'); return; }
+    if (cn.length !== 13) { toast('The CNIC or B-Form has 13 digits.', 'error'); return; }
+    const cnicH = hex(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('akf-ben:' + cn))));   // shortcut: a one-way code, enough to warn about duplicates; move to the encrypted store (049) if full CNICs must be read back
+    const dup = (S.cases || []).find(x => (x.bens || []).some(b => b.cnicH === cnicH));
+    if (dup && !confirm(`This CNIC is already a beneficiary in case ${dup.id}. Add anyway?`)) return;
+    (c.bens = c.bens || []).push({ id: 'B' + Date.now().toString(36), name: name.slice(0, 60), father: father.slice(0, 60), cnicH, cnic4: cn.slice(-4), contact: cVal('cb-contact').slice(0, 15), address: cVal('cb-addr').slice(0, 120), eligible: !!($('#cb-elig') && $('#cb-elig').checked), consent: !!$('#cb-consent').checked });
+    await caseSave(c, 'Beneficiary added', dup ? 'Duplicate warning shown: also in ' + dup.id : '', '', 'Beneficiary recorded.'); },
+  'case-file': async t => { if (!ERP) { toast('The offline demo keeps only the file name.', 'info'); return; }
+    const { data, error } = await erpSb.storage.from('case-files').createSignedUrl(t.dataset.path, 120); if (error || !data) { toast(erpErr(error, 'The file could not be opened'), 'error'); return; }
+    window.open(data.signedUrl, '_blank', 'noopener'); },
+  'case-rep': async t => { const c = caseById(t.dataset.id); if (!c) return; $('#print-area').innerHTML = caseReportHTML(c, t.dataset.kind);
+    await audit(t.dataset.kind === 'donor' ? 'CASE_DONOR_REPORT_PRINTED' : 'CASE_EXECUTION_REPORT_PRINTED', c.id, ''); persist(); setTimeout(() => window.print(), 120); }
+});
+
 function seedDemo(staff) {
   let seed = 20261028;
   const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -5591,6 +6074,8 @@ function countUp(el) {
   const step = now => { const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3); el.textContent = p < 1 ? fmt(target * e) : txt; if (p < 1 && document.body.contains(el)) requestAnimationFrame(step); };
   el.textContent = fmt(0); requestAnimationFrame(step);
 }
+/* a redraw of the same page (a colleague saved something, the tab came back) must not replay the fade-in and chart growth: it looks like blinking */
+const settle = root => root.getAnimations({ subtree: true }).forEach(a => { if (a.effect && a.effect.getTiming().iterations !== Infinity) a.finish(); });
 function animateView(root) {
   if (!motionOn()) return;
   root.classList.remove('view-enter'); void root.offsetWidth; root.classList.add('view-enter');
@@ -5672,7 +6157,7 @@ let lastRenderedView = '', lastDone = null;
 function afterRender(navigated) {
   const root = $('#view');
   const doneNow = UI.view === 'new' && UI.newDone && UI.newDone !== lastDone;
-  if (navigated || doneNow) animateView(root);
+  if (navigated || doneNow) animateView(root); else settle(root);
   if (doneNow) setTimeout(celebrate, 250);
   lastDone = UI.newDone; lastRenderedView = UI.view;
   moveNavInd(); bumpOnChange($('#sum-total'));
@@ -5690,13 +6175,14 @@ try { matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', 
 let erpSb = null, erpChan = null, erpAuditNew = [], erpRenderT = 0, erpQueued = null, erpBusy = Promise.resolve();
 const ERP_SAVED = new Map();                         // "collection id" → JSON last confirmed by the server
 const ERP_POOL = { donor: [], donation: [], pledge: [] };
-const ERP_COLS = ['donors', 'donations', 'pledges', 'messages', 'corrections', 'signatories'];
+const ERP_COLS = ['donors', 'donations', 'pledges', 'messages', 'corrections', 'signatories', 'cases'];
 const erpKey = (c, id) => c + ' ' + id;
 function erpErr(e, what) {
   const ref = hex(rand(3)).toUpperCase();
   console.error(`[ref ${ref}]`, e);
   const friendly = e && ['42501', '22023', '23514', 'P0001'].includes(e.code) && e.message && e.message.length < 300 && !/relation|column|function|syntax|policy/i.test(e.message);
-  return `${what}${friendly ? ': ' + e.message : '.'} (ref ${ref})`;
+  if (navigator.onLine === false) return what + '. You are offline. Check your internet and try again.';
+  return friendly ? `${what}: ${e.message} (ref ${ref})` : `${what}. Please try again. If it happens again, give reference ${ref} to the Super Admin.`;
 }
 async function erpNeed(kind, n = 1) {
   if (!ERP || !n) return;
@@ -5817,7 +6303,7 @@ async function erpLoadAll() {
   const one = async p => {
     const { data, error } = await erpSb.from('donor_rows').select('collection,id,data').order('collection').order('id').range(p * PAGE, p * PAGE + PAGE - 1);
     if (error) throw new Error(erpErr(error, 'Donor records could not be loaded'));
-    rows[p] = data || []; done++; setLoader(Math.round(done / pages * 100), `${NUM.format(Math.min(total, done * PAGE))} of ${NUM.format(total)} records`);
+    rows[p] = data || []; done++; setLoader(Math.round(done / pages * 100), 'Loading your data…');
   };
   for (let p = 0; p < pages; p += 6) await Promise.all(Array.from({ length: Math.min(6, pages - p) }, (_, i) => one(p + i)));
   const st = newStore(); st.users = {}; st.receiptKey = '';
@@ -5921,10 +6407,23 @@ async function erpBoot() {
   enterApp();
   erpSubscribe();
   /* Alkhidmat AI — every portal has it; it gets only figures, never donor names, CNIC or phone numbers */
-  if (window.AKF_ASSISTANT) AKF_ASSISTANT({ sb: erpSb, portal: PORTAL_TITLE, user: ME.name.split(' ')[0], context: erpAiContext,
+  if (window.AKF_ASSISTANT) AKF_ASSISTANT({ sb: erpSb, portal: PORTAL_TITLE, user: ME.name, context: erpAiContext,
     hints: ['What needs my attention today?', 'How much did we collect this month?', 'Explain how a receipt gets verified', 'How do I record an in-kind donation?'] });
   await audit('LOGIN', ME.email, 'Opened Donor Management'); await persist();
+  await erpAdoptSignature();
   await erpReconcile();
+  await fileReqLoad();
+  if (FILE_REQS.some(r => r.forMe)) { toast('A full donor file request is waiting for you. Open Donors → Full donor file.', 'info', 12000); if (UI.view === 'donors') render(); }
+}
+/* a signature saved in another portal: someone who signs receipts here and has none yet gets it, once */
+async function erpAdoptSignature() {
+  if (!can('donation.create') || S.signatories.some(x => x.userId === ME.id) || !window.AKF_DESK || !AKF_DESK.signatures) return;
+  try {
+    const url = (await AKF_DESK.signatures())[String(ME.email).toLowerCase()]; if (!url) return;
+    const sigId = 'SIG-' + (await sha256(url)).slice(0, 16); S.signatures[sigId] = url;
+    await upsertMySignatory(sigId); S.users[ME.id].sigId = sigId;
+    await audit('SIGNATORY_ADDED', ME.name, 'Signature taken from another portal'); await persist(); buildChrome();
+  } catch (e) { console.warn('[signature]', e && e.message); }
 }
 /* what Alkhidmat AI may know: totals and counts this person can see. No names, CNIC, phones or addresses. */
 function erpAiContext() {
