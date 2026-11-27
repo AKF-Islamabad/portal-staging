@@ -6,7 +6,7 @@
 <title>Jazba · Alkhidmat Foundation Islamabad</title>
 <meta name="description" content="One sign-in for every Alkhidmat Foundation Islamabad portal">
 <!-- Scripts only from this site (by hash), config.js and pinned CDN files; data only to Supabase. Run: node tools/csp-hash.js erp/home/index.html -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://cdn.jsdelivr.net/npm/xlsx@0.18.5/ https://cdn.jsdelivr.net/npm/jsqr@1.4.0/ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/ 'sha256-a4jJ8HAzkOgiltUyAdn4emIpVTxTir6keTzCG6KPHAI=' 'sha256-HfBmp7DuojL4hhQIUHomtgChTGcLp5wLUKTNLjx9T1A='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://cdn.jsdelivr.net/npm/xlsx@0.18.5/ https://cdn.jsdelivr.net/npm/jsqr@1.4.0/ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/ 'sha256-a4jJ8HAzkOgiltUyAdn4emIpVTxTir6keTzCG6KPHAI=' 'sha256-eXmNTdgKvb9+QROzQXJ8rlVao3L6XHKHN9avTo9KsDs='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="no-frame">html{display:none!important}</style>
 <script>(function(){var em=/[?&]embed=admin(&|$)/.test(location.search),ok=window.self===window.top;if(!ok&&em){try{ok=window.parent.location.origin===location.origin;}catch(e){ok=false;}}if(ok){var nf=document.getElementById("no-frame");nf.parentNode.removeChild(nf);if(em&&window.self!==window.top){window.AKF_EMBED=true;document.documentElement.classList.add("embed");window.AKF_NOTIFY=function(){};window.AKF_ASSISTANT=function(){};}}else{try{window.top.location=window.self.location;}catch(e){}}})();</script>
@@ -448,7 +448,7 @@ async function adminCall(body) {
    This page still handles new passwords, the Super Admin's authenticator set-up and "no access", and the Super Admin
    tools (People & access, Portals, Settings, Activity) when opened as ./#admin.
    To go back to this page (own sign-in and Today) for everyone: set SIGN_IN_PAGE = "" and publish. ---------- */
-const SIGN_IN_PAGE = "home/?v=2026-11-13c";   // ?v= : change it whenever home/ changes, so no browser opens an old saved copy
+const SIGN_IN_PAGE = "home/?v=2026-11-27a";   // ?v= : change it whenever home/ changes, so no browser opens an old saved copy
 // The Super Admin tools (People & access, Portals & departments, Settings, Activity & usage) now open INSIDE the new page:
 // it shows this page in a frame with ?embed=admin&tab=… (no old rail, top bar, Today, note or assistant here).
 const EMBED = !!window.AKF_EMBED;
