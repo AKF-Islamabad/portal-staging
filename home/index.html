@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <!-- script-src is filled in by tools/csp-hash.js (inline scripts by hash). Fonts, the background library and images are all served from this site. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://cdn.jsdelivr.net/npm/xlsx@0.18.5/ https://cdn.jsdelivr.net/npm/jsqr@1.4.0/ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/ 'sha256-Ovsc7wZc/kr+SZM6+f5RJiXPE+JkAT02qS624mh6cBQ=' 'sha256-PGtLg0ogp2fgHiIVeqHJdwEqQhdTJzvR5Xe1a4/Tta0=' 'sha256-6LcPaLDDDJOKhgrEW96B1vQmsP2RoITNd0asUQytdsY='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'; worker-src 'self'; manifest-src 'none'; media-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://cdn.jsdelivr.net/npm/xlsx@0.18.5/ https://cdn.jsdelivr.net/npm/jsqr@1.4.0/ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/ 'sha256-Ovsc7wZc/kr+SZM6+f5RJiXPE+JkAT02qS624mh6cBQ=' 'sha256-1cf6PoRWdX8ofWmAcpwaZeKJFRB9sG88b7olCh6XosU=' 'sha256-z+l8vVpA4qieK7HrB9zRVJNZSrX2we7mX6OlNcvt2ag='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'self'; worker-src 'self'; manifest-src 'none'; media-src 'none'">
 <style id="no-frame">html{display:none!important}</style>
 <script>if(window.self===window.top){var nf=document.getElementById("no-frame");nf.parentNode.removeChild(nf);}else{try{window.top.location=window.self.location;}catch(e){}}</script>
 <meta name="robots" content="noindex, nofollow">
@@ -33,7 +33,9 @@
   // Apply theme before first paint to avoid a flash.
   // Lock before first paint when there is no session, so the portal never flashes behind the sign-in screen.
   // Signed-in state lives in the ERP's shared sign-in slot (akf-portals-auth); the page checks it with the database before showing anything.
-  try { if (!localStorage.getItem('akf-portals-auth')) document.documentElement.classList.add('locked'); } catch (e) { document.documentElement.classList.add('locked'); }
+  // The Training ERP (the practice copy at /portal-staging/) and a training view keep their sign-in in this tab only (sessionStorage).
+  var AKF_AUTH_STORE = (function () { try { return sessionStorage.getItem('akf-as') || location.pathname.indexOf('/portal-staging/') === 0 ? sessionStorage : localStorage; } catch (e) { return null; } })();
+  try { if (!AKF_AUTH_STORE.getItem('akf-portals-auth')) document.documentElement.classList.add('locked'); } catch (e) { document.documentElement.classList.add('locked'); }
   try { var t = localStorage.getItem('akf-theme'); document.documentElement.dataset.theme = t || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch (e) {}
   // Colour style: official Alkhidmat palette by default; "royal" keeps the earlier logo-blue look.
   document.documentElement.dataset.brand = 'official';
@@ -1996,7 +1998,7 @@ const Live = {
   async start() {
     const err = this.configError();
     if (err) { Auth.show(); Auth.error(err); $('#lg-submit').disabled = true; return; }
-    this.sb = supabase.createClient(CFG.url, CFG.anonKey, { auth: { storageKey: 'akf-portals-auth' } });
+    this.sb = supabase.createClient(CFG.url, CFG.anonKey, { auth: { storage: (() => { try { return sessionStorage.getItem('akf-as') || location.pathname.indexOf('/portal-staging/') === 0 ? sessionStorage : undefined; } catch (e) { return undefined; } })(), storageKey: 'akf-portals-auth' } });
     this.sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT' && this.me) { this.me = null; Role.apply(); Auth.show(); } });
     const { data } = await this.sb.auth.getSession();
     if (!data.session) return Auth.show();
