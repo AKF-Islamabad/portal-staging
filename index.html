@@ -6,7 +6,7 @@
 <title>Jazba · Alkhidmat Foundation Islamabad</title>
 <meta name="description" content="One sign-in for every Alkhidmat Foundation Islamabad portal">
 <!-- Scripts only from this site (by hash), config.js and pinned CDN files; data only to Supabase. Run: node tools/csp-hash.js erp/home/index.html -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://cdn.jsdelivr.net/npm/xlsx@0.18.5/ https://cdn.jsdelivr.net/npm/jsqr@1.4.0/ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/ 'sha256-a4jJ8HAzkOgiltUyAdn4emIpVTxTir6keTzCG6KPHAI=' 'sha256-aQt2bawF8MvXXJW0et+kn06mvRYeuB43WOeS0ck4xDA='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/ https://cdn.jsdelivr.net/npm/xlsx@0.18.5/ https://cdn.jsdelivr.net/npm/jsqr@1.4.0/ https://cdn.jsdelivr.net/npm/chart.js@4.4.1/ 'sha256-a4jJ8HAzkOgiltUyAdn4emIpVTxTir6keTzCG6KPHAI=' 'sha256-HfBmp7DuojL4hhQIUHomtgChTGcLp5wLUKTNLjx9T1A='; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <style id="no-frame">html{display:none!important}</style>
 <script>(function(){var em=/[?&]embed=admin(&|$)/.test(location.search),ok=window.self===window.top;if(!ok&&em){try{ok=window.parent.location.origin===location.origin;}catch(e){ok=false;}}if(ok){var nf=document.getElementById("no-frame");nf.parentNode.removeChild(nf);if(em&&window.self!==window.top){window.AKF_EMBED=true;document.documentElement.classList.add("embed");window.AKF_NOTIFY=function(){};window.AKF_ASSISTANT=function(){};}}else{try{window.top.location=window.self.location;}catch(e){}}})();</script>
@@ -505,7 +505,7 @@ async function start() {
   if (asFlag()) { const { data } = await sb.auth.getSession(); if (!data.session) { try { sessionStorage.removeItem("akf-as"); } catch (e) { } return location.replace(location.pathname); } }   // shared by the main page and every new portal
   sb.auth.onAuthStateChange((ev, session) => {
     if (ev === "PASSWORD_RECOVERY") S.recovery = true;
-    if (ev === "SIGNED_OUT") { clearTimeout(todayTimer); S.today = null; S.session = null; S.me = null; S.view = "signin"; render(); }
+    if (ev === "SIGNED_OUT") { twoStep.p = null; clearTimeout(todayTimer); S.today = null; S.session = null; S.me = null; S.view = "signin"; render(); }
     else if (session && (!S.session || S.session.user.id !== session.user.id)) { S.session = session; loadMe(); }
   });
   const { data } = await sb.auth.getSession();
@@ -725,28 +725,35 @@ function twoStep() {
   const code = el("input", { class: "input", inputmode: "numeric", autocomplete: "one-time-code", maxlength: 6, pattern: "[0-9]{6}", placeholder: "123456", "aria-label": "6-digit code", style: "font-size:22px;letter-spacing:.3em;text-align:center" });
   const msg = el("div"), btn = el("button", { class: "btn", type: "submit", text: "Confirm" }), qr = el("div", { style: "display:grid;gap:10px;justify-items:center" });
   let factorId = null;
-  (async () => {
-    try {
-      const { data, error } = await sb.auth.mfa.listFactors(); if (error) throw error;
-      for (const f of (data.all || []).filter(f => f.status !== "verified")) await sb.auth.mfa.unenroll({ factorId: f.id });   // an unfinished set-up from before
-      if (!S.mfaNew && data.totp && data.totp.length) { factorId = data.totp[0].id; code.focus(); return; }
-      const r = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: "Jazba " + new Date().toISOString().slice(0, 10) }); if (r.error) throw r.error;
-      factorId = r.data.id;
-      qr.append(el("img", { src: r.data.totp.qr_code, alt: "QR code for the authenticator app", width: 200, height: 200, style: "background:#fff;border-radius:12px;padding:8px" }),
-        el("small", { class: "muted", text: "Or type this key in the app: " + r.data.totp.secret }));
-      code.focus();
-    } catch (e) { fail(e, "Two-step sign-in could not start"); }
+  /* ONE set-up per sign-in, however often this screen is drawn. Drawn twice at the same moment, two set-ups used to start
+     together: the second was refused (same name), so the screen that stayed had no QR code and said "Still starting". */
+  if (!twoStep.p) twoStep.p = (async () => {
+    const { data, error } = await sb.auth.mfa.listFactors(); if (error) throw error;
+    for (const f of (data.all || []).filter(f => f.status !== "verified")) await sb.auth.mfa.unenroll({ factorId: f.id });   // an unfinished set-up from before
+    if (!S.mfaNew && data.totp && data.totp.length) return { id: data.totp[0].id };
+    const r = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: "Jazba " + new Date().toISOString().slice(0, 19) }); if (r.error) throw r.error;
+    return { id: r.data.id, qr: r.data.totp.qr_code, secret: r.data.totp.secret };
   })();
+  twoStep.p.then(r => {
+    factorId = r.id;
+    if (r.qr) qr.replaceChildren(el("img", { src: r.qr, alt: "QR code for the authenticator app", width: 200, height: 200, style: "background:#fff;border-radius:12px;padding:8px" }),
+      el("small", { class: "muted", text: "Or type this key in the app: " + r.secret }));
+    code.focus();
+  }).catch(e => {
+    twoStep.p = null;   // the next draw tries again
+    msg.replaceChildren(el("div", { class: "notice bad", text: "The set-up did not start. Press F5 to load the page again and wait until the QR code shows." }));
+    fail(e, "Two-step sign-in could not start");
+  });
   const form = el("form", { style: "display:grid;gap:14px" }, qr, el("label", { class: "f" }, "6-digit code from the app", code), msg, btn,
     el("button", { class: "btn ghost", type: "button", text: "Sign out", onclick: () => sb.auth.signOut() }));
   form.addEventListener("submit", async ev => {
     ev.preventDefault(); msg.replaceChildren();
     if (!/^[0-9]{6}$/.test(code.value.trim())) return msg.append(el("div", { class: "notice bad", text: "Type the 6 digits shown in the app." }));
-    if (!factorId) return msg.append(el("div", { class: "notice bad", text: "Still starting. Wait a second and try again." }));
+    if (!factorId) return msg.append(el("div", { class: "notice bad", text: S.mfaNew ? "Wait until the QR code shows above, scan it with the authenticator app, then type the code the app shows for this new entry." : "Still starting. Wait a second and try again." }));
     btn.disabled = true;
     const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code: code.value.trim() });
     if (error) { btn.disabled = false; code.select(); return msg.append(el("div", { class: "notice bad", text: /rate|too many/i.test(error.message) ? "Too many tries. Wait a minute." : "That code is not right, or it has just changed. Type the new code." })); }
-    toast(S.mfaNew ? "Two-step sign-in is on" : "Signed in"); S.session = (await sb.auth.getSession()).data.session; await loadMe();
+    twoStep.p = null; toast(S.mfaNew ? "Two-step sign-in is on" : "Signed in"); S.session = (await sb.auth.getSession()).data.session; await loadMe();
   });
   return authCard(S.mfaNew ? "Protect the Super Admin account" : "Enter your code", [el("p", { text: S.mfaNew
     ? "The Super Admin needs a second step at sign-in. On your phone, open Google Authenticator or Microsoft Authenticator, tap +, and scan this code. Then type the 6 digits it shows."
